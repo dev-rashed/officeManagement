@@ -38,6 +38,7 @@
                 </div>
             </div>
         </div>
+        <x-global-popup />
         @fluxScripts
     </body>
 </html>

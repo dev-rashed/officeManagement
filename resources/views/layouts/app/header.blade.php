@@ -73,6 +73,8 @@
 
         {{ $slot }}
 
+        @include('lara-izitoast::toast')
+        <x-global-popup />
         @fluxScripts
     </body>
 </html>

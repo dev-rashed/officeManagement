@@ -15,6 +15,24 @@
                     <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="clock" :href="route('activity.log')" :current="request()->routeIs('activity.log')" wire:navigate>
+                        {{ __('Activity Log') }}
+                    </flux:sidebar.item>
+                    <flux:navlist.group
+                        expandable
+                        :expanded="request()->routeIs('income.*')"
+                        :heading="__('Income Management')"
+                    >
+                        <flux:sidebar.item :href="route('income.index')" :current="request()->routeIs('income.index', 'income.create', 'income.show', 'income.edit')" wire:navigate>
+                            {{ __('Incomes') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item :href="route('income.categories')" :current="request()->routeIs('income.categories')" wire:navigate>
+                            {{ __('Categories') }}
+                        </flux:sidebar.item>
+                    </flux:navlist.group>
+                    <flux:sidebar.item icon="document-text" :href="route('expense.index')" :current="request()->routeIs('expense.*')" wire:navigate>
+                        {{ __('Expense Management') }}
+                    </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 
@@ -90,6 +108,8 @@
 
         {{ $slot }}
 
+        @include('lara-izitoast::toast')
+        <x-global-popup />
         @fluxScripts
     </body>
 </html>

@@ -17,6 +17,8 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 class User extends Authenticatable
 {
     public const ROLE_SUPERADMIN = 'superadmin';
+    public const ROLE_ADMIN = 'admin';
+    public const ROLE_ACCOUNTANT = 'accountant';
     public const ROLE_CHAIRMAN = 'chairman';
     public const ROLE_MANAGING_DIRECTOR = 'managing_director';
     public const ROLE_DIRECTOR = 'director';
@@ -45,6 +47,8 @@ class User extends Authenticatable
     {
         return [
             self::ROLE_SUPERADMIN,
+            self::ROLE_ADMIN,
+            self::ROLE_ACCOUNTANT,
             self::ROLE_CHAIRMAN,
             self::ROLE_MANAGING_DIRECTOR,
             self::ROLE_DIRECTOR,
@@ -67,6 +71,16 @@ class User extends Authenticatable
     public function isSuperAdmin(): bool
     {
         return $this->hasRole(self::ROLE_SUPERADMIN);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->hasRole(self::ROLE_ADMIN) || $this->isSuperAdmin();
+    }
+
+    public function isAccountant(): bool
+    {
+        return $this->hasRole(self::ROLE_ACCOUNTANT);
     }
 
     public function isChairman(): bool

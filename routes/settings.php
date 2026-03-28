@@ -1,11 +1,15 @@
 <?php
 
+use App\Http\Controllers\Settings\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
+    Route::post('settings/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('settings/profile/profile-photo', [ProfileController::class, 'destroyProfilePhoto'])->name('profile.photo.destroy');
+    Route::delete('settings/profile/digital-signature', [ProfileController::class, 'destroyDigitalSignature'])->name('profile.signature.destroy');
     Route::livewire('settings/profile', 'pages::settings.profile')->name('profile.edit');
 });
 

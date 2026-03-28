@@ -41,11 +41,11 @@ class CreateNewUser implements CreatesNewUsers
         $digitalSignaturePath = null;
 
         if (isset($input['profile_photo'])) {
-            $profilePhotoPath = Storage::disk('public')->putFile('profile-photos', $input['profile_photo']);
+            $profilePhotoPath = $input['profile_photo']->store('images/profile-photos', 'public');
         }
 
         if (isset($input['digital_signature'])) {
-            $digitalSignaturePath = Storage::disk('public')->putFile('digital-signatures', $input['digital_signature']);
+            $digitalSignaturePath = $input['digital_signature']->store('images/digital-signatures', 'public');
         }
 
         $twoFactorSecret = null;
