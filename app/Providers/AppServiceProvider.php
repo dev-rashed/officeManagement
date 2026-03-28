@@ -2,11 +2,20 @@
 
 namespace App\Providers;
 
+use App\Auth\TwoFactorAuthenticationProvider as CustomTwoFactorAuthenticationProvider;
+use App\Models\User;
+use App\Notifications\EmailTwoFactorCode;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Fortify\Contracts\TwoFactorAuthenticationProvider as TwoFactorAuthenticationProviderContract;
+use Laravel\Fortify\Events\TwoFactorAuthenticationChallenged;
+use Laravel\Fortify\Fortify;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -15,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(TwoFactorAuthenticationProviderContract::class, CustomTwoFactorAuthenticationProvider::class);
     }
 
     /**
@@ -24,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->registerTwoFactorListeners();
     }
 
     /**
@@ -46,5 +56,26 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null,
         );
+    }
+
+    protected function registerTwoFactorListeners(): void
+    {
+        Event::listen(TwoFactorAuthenticationChallenged::class, function (TwoFactorAuthenticationChallenged $event): void {
+            $user = $event->user;
+
+            if ($user->two_factor_type !== User::TWO_FACTOR_TYPE_EMAIL) {
+                return;
+            }
+
+            $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            $expiresAt = now()->addMinutes(10)->timestamp;
+            $payload = sprintf('email:%s:%s', Hash::make($code), $expiresAt);
+
+            $user->two_factor_secret = Fortify::currentEncrypter()->encrypt($payload);
+            $user->two_factor_confirmed_at = $user->two_factor_confirmed_at ?? now();
+            $user->save();
+
+            Notification::send($user, new EmailTwoFactorCode($code));
+        });
     }
 }
