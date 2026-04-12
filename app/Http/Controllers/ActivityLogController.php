@@ -10,12 +10,14 @@ class ActivityLogController extends Controller
     public function index(Request $request)
     {
         $totalLogs = ActivityLog::count();
+        $todayLogs = ActivityLog::whereDate('created_at', today())->count();
+        $activeUsers = ActivityLog::whereNotNull('user_id')->distinct('user_id')->count('user_id');
         $initialLogs = ActivityLog::with('user')
             ->latest('created_at')
             ->take(10)
             ->get();
 
-        return view('pages.activity-log', compact('totalLogs', 'initialLogs'));
+        return view('pages.activity-log', compact('totalLogs', 'todayLogs', 'activeUsers', 'initialLogs'));
     }
 
     public function data(Request $request)

@@ -54,6 +54,8 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'api_key' => env('APP_API_KEY', 'office-management-api-key'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

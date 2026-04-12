@@ -22,7 +22,11 @@ class LogActivity
         $route = $request->route();
         $routeName = $route?->getName();
 
-        if (in_array($routeName, ['activity.log', 'activity.log.data'], true)) {
+        if (! $routeName || str_ends_with($routeName, '.data')) {
+            return $response;
+        }
+
+        if (in_array($routeName, ['activity.log'], true)) {
             return $response;
         }
 

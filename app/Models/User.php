@@ -98,6 +98,37 @@ class User extends Authenticatable
         return $this->hasRole(self::ROLE_DIRECTOR);
     }
 
+    public function permissions(): array
+    {
+        if (! $this->role) {
+            return [];
+        }
+
+        return config('permissions.roles.' . $this->role, []);
+    }
+
+    public function hasPermission(string $permission): bool
+    {
+        $permissions = $this->permissions();
+
+        if (in_array('*', $permissions, true)) {
+            return true;
+        }
+
+        return in_array($permission, $permissions, true);
+    }
+
+    public function hasAnyPermission(array $permissions): bool
+    {
+        $userPermissions = $this->permissions();
+
+        if (in_array('*', $userPermissions, true)) {
+            return true;
+        }
+
+        return (bool) array_intersect($permissions, $userPermissions);
+    }
+
     /**
      * Get the user's initials
      */

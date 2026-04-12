@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\Finance\IncomeCategoryController;
 use App\Http\Controllers\IncomeController;
 use Illuminate\Support\Facades\Route;
 
@@ -12,19 +13,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('activity-log', [ActivityLogController::class, 'index'])->name('activity.log');
     Route::get('activity-log/data', [ActivityLogController::class, 'data'])->name('activity.log.data');
 
+    // Income entries (static segments must come before {income} wildcard)
     Route::get('income', [IncomeController::class, 'index'])->name('income.index');
-    Route::get('income/categories', [IncomeController::class, 'categories'])->name('income.categories');
-    Route::post('income/categories', [IncomeController::class, 'storeCategory'])->name('income.categories.store');
-    Route::put('income/categories/{category}', [IncomeController::class, 'updateCategory'])->name('income.categories.update');
-    Route::delete('income/categories/{category}', [IncomeController::class, 'destroyCategory'])->name('income.categories.destroy');
+    Route::get('income/data', [IncomeController::class, 'indexData'])->name('income.data');
     Route::get('income/create', [IncomeController::class, 'create'])->name('income.create');
     Route::post('income', [IncomeController::class, 'store'])->name('income.store');
+
+    // Income categories (before income/{income} wildcard)
+    Route::get('income/categories', [IncomeCategoryController::class, 'index'])->name('income.categories');
+    Route::get('income/categories/data', [IncomeCategoryController::class, 'data'])->name('income.categories.data');
+    Route::get('income/categories/{category}', [IncomeCategoryController::class, 'show'])->name('income.categories.show');
+    Route::post('income/categories', [IncomeCategoryController::class, 'store'])->name('income.categories.store');
+    Route::put('income/categories/{category}', [IncomeCategoryController::class, 'update'])->name('income.categories.update');
+    Route::delete('income/categories/{category}', [IncomeCategoryController::class, 'destroy'])->name('income.categories.destroy');
+
+    // Income wildcard routes
     Route::get('income/{income}', [IncomeController::class, 'show'])->name('income.show');
     Route::get('income/{income}/edit', [IncomeController::class, 'edit'])->name('income.edit');
     Route::put('income/{income}', [IncomeController::class, 'update'])->name('income.update');
     Route::delete('income/{income}', [IncomeController::class, 'destroy'])->name('income.destroy');
     Route::post('income/{income}/approve', [IncomeController::class, 'approve'])->name('income.approve');
 
+    // Expense entries
     Route::get('expense', [ExpenseController::class, 'index'])->name('expense.index');
     Route::get('expense/create', [ExpenseController::class, 'create'])->name('expense.create');
     Route::post('expense', [ExpenseController::class, 'store'])->name('expense.store');

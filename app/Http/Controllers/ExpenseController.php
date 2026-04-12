@@ -12,8 +12,20 @@ class ExpenseController extends Controller
     public function index()
     {
         $entries = ExpenseEntry::orderByDesc('date')->paginate(20);
+        $totalEntries = ExpenseEntry::count();
+        $pendingEntries = ExpenseEntry::whereIn('status', [
+            ExpenseEntry::STATUS_PENDING,
+            ExpenseEntry::STATUS_PENDING_DIRECTOR,
+            ExpenseEntry::STATUS_PENDING_CHAIRMAN,
+        ])->count();
+        $approvedEntries = ExpenseEntry::where('status', ExpenseEntry::STATUS_FULLY_APPROVED)->count();
 
-        return view('pages.finance.expense.index', compact('entries'));
+        return view('pages.finance.expense.index', compact(
+            'entries',
+            'totalEntries',
+            'pendingEntries',
+            'approvedEntries',
+        ));
     }
 
     public function create()
@@ -154,7 +166,7 @@ class ExpenseController extends Controller
     {
         $user = auth()->user();
 
-        if (! $user || (! $user->isSuperAdmin() && ! $user->isAdmin() && ! $user->isAccountant())) {
+        if (! $user || ! $user->hasPermission('finance.manage')) {
             abort(403);
         }
     }

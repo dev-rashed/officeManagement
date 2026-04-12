@@ -61,6 +61,75 @@ select:focus[data-flux-control] {
     @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
 }
 
-/* \[:where(&)\]:size-4 {
-    @apply size-4;
-} */
+@layer components {
+    .status-switch {
+        align-items: center;
+        column-gap: 0.75rem;
+        display: inline-flex;
+        user-select: none;
+    }
+
+    .status-switch__input {
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+        position: absolute;
+        width: 1px;
+    }
+
+    .status-switch__track {
+        background: #e2e8f0;
+        border-radius: 9999px;
+        display: inline-flex;
+        flex-shrink: 0;
+        height: 1.35rem;
+        padding: 0.125rem;
+        position: relative;
+        transition: background-color 0.2s ease;
+        width: 2.45rem;
+    }
+
+    .status-switch__thumb {
+        background: #ffffff;
+        border-radius: 9999px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.18);
+        height: 1.1rem;
+        transition: transform 0.2s ease;
+        width: 1.1rem;
+    }
+
+    .status-switch__text {
+        color: #475569;
+        font-size: 0.75rem;
+        font-weight: 600;
+        line-height: 1;
+    }
+
+    .status-switch__input:checked + .status-switch__track {
+        background: #10b981;
+    }
+
+    .status-switch__input:checked + .status-switch__track .status-switch__thumb {
+        transform: translateX(1.1rem);
+    }
+
+    .status-switch__input:focus-visible + .status-switch__track {
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.14);
+    }
+
+    .dark .status-switch__track {
+        background: #3f3f46;
+    }
+
+    .dark .status-switch__thumb {
+        background: #fafafa;
+    }
+
+    .dark .status-switch__text {
+        color: #d4d4d8;
+    }
+
+    .dark .status-switch__input:checked + .status-switch__track {
+        background: #059669;
+    }
+}

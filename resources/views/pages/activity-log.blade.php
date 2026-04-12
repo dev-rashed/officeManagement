@@ -1,23 +1,36 @@
 <x-layouts::app :title="__('Activity Log')">
     <div class="space-y-5">
-        <div class="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h1 class="text-xl font-semibold tracking-tight text-zinc-900 dark:text-white">{{ __('Activity Log') }}</h1>
-                    <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{{ __('Recent user actions and activity history.') }}</p>
-                </div>
-                <div class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-300">
-                    {{ trans_choice(':count record|:count records', $totalLogs, ['count' => $totalLogs]) }}
-                </div>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h1 class="text-lg font-semibold tracking-tight text-zinc-900 dark:text-white">{{ __('Activity Log') }}</h1>
+                <p class="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">{{ __('Recent user actions and activity history.') }}</p>
             </div>
         </div>
 
-        <div class="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div class="grid gap-3 md:grid-cols-3">
+            <div class="page-stat-card">
+                <p class="page-stat-label">{{ __('Total Logs') }}</p>
+                <p class="page-stat-value">{{ number_format($totalLogs) }}</p>
+                <span class="page-stat-bar is-total"></span>
+            </div>
+            <div class="page-stat-card">
+                <p class="page-stat-label">{{ __('Today') }}</p>
+                <p class="page-stat-value">{{ number_format($todayLogs) }}</p>
+                <span class="page-stat-bar is-pending"></span>
+            </div>
+            <div class="page-stat-card">
+                <p class="page-stat-label">{{ __('Active Users') }}</p>
+                <p class="page-stat-value">{{ number_format($activeUsers) }}</p>
+                <span class="page-stat-bar is-active"></span>
+            </div>
+        </div>
+
+        <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
             <div class="overflow-x-auto">
                 <table
                     id="activity-log-table"
                     data-ajax-url="{{ route('activity.log.data') }}"
-                    class="min-w-full border-collapse text-left text-sm"
+                    class="min-w-full text-left"
                     style="width:100%"
                 >
                     <thead>
@@ -35,35 +48,19 @@
                             <tr>
                                 <td>
                                     <div class="leading-tight">
-                                        <div class="font-medium text-zinc-100">{{ $log->created_at?->format('M d, Y') }}</div>
-                                        <div class="mt-1 text-[11px] text-zinc-500">{{ $log->created_at?->format('h:i A') }}</div>
+                                        <div class="data-table-title">{{ $log->created_at?->format('M d, Y') }}</div>
+                                        <div class="mt-1 data-table-subtle">{{ $log->created_at?->format('h:i A') }}</div>
                                     </div>
                                 </td>
-                                <td>
-                                    <span class="font-medium text-zinc-100">{{ $log->user?->name ?? __('System') }}</span>
-                                </td>
-                                <td>
-                                    <span class="inline-flex rounded-full border border-sky-900/80 bg-sky-950/50 px-2.5 py-1 text-[11px] font-medium text-sky-300">
-                                        {{ $log->action }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="inline-flex rounded-full border border-zinc-800 bg-zinc-800/90 px-2.5 py-1 text-[11px] font-medium text-zinc-200">
-                                        {{ $log->route_name ?: $log->url }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="text-zinc-200">{{ $log->ip_address ?: __('N/A') }}</span>
-                                </td>
-                                <td>
-                                    <span class="text-zinc-300">{{ $log->description ?: __('No description') }}</span>
-                                </td>
+                                <td><span class="data-table-title">{{ $log->user?->name ?? __('System') }}</span></td>
+                                <td><span class="data-table-badge is-active">{{ $log->action }}</span></td>
+                                <td><span class="data-table-subtle">{{ $log->route_name ?: $log->url }}</span></td>
+                                <td><span class="data-table-subtle">{{ $log->ip_address ?: __('N/A') }}</span></td>
+                                <td><span class="data-table-subtle">{{ $log->description ?: __('No description') }}</span></td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-4 py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
-                                    {{ __('No activity logs found.') }}
-                                </td>
+                                <td colspan="6" class="px-4 py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">{{ __('No activity logs found.') }}</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -73,128 +70,220 @@
     </div>
 
     <style>
+        .page-stat-card {
+            background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+            border: 1px solid #dbe4f0;
+            border-radius: 18px;
+            box-shadow: 0 10px 24px rgba(148, 163, 184, 0.08);
+            padding: 0.95rem 1rem 0.85rem;
+        }
+
+        .page-stat-label {
+            color: #64748b;
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+
+        .page-stat-value {
+            color: #0f172a;
+            font-size: 1.7rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-top: 0.8rem;
+        }
+
+        .page-stat-bar {
+            border-radius: 9999px;
+            display: inline-block;
+            height: 2px;
+            margin-top: 0.9rem;
+            width: 1.7rem;
+        }
+
+        .page-stat-bar.is-total { background: #64748b; }
+        .page-stat-bar.is-pending { background: #f59e0b; }
+        .page-stat-bar.is-active { background: #10b981; }
+
         #activity-log-table_wrapper {
-            color: #d4d4d8;
+            color: #475569;
         }
 
         #activity-log-table_wrapper .dataTables_length,
         #activity-log-table_wrapper .dataTables_filter {
-            padding: 0.85rem 1rem 0;
+            padding: 0.8rem 0.95rem 0;
         }
 
         #activity-log-table_wrapper .dataTables_info,
         #activity-log-table_wrapper .dataTables_paginate {
-            padding: 0.85rem 1rem 1rem;
+            padding: 0.8rem 0.95rem 0.95rem;
         }
 
         #activity-log-table_wrapper .dataTables_length label,
         #activity-log-table_wrapper .dataTables_filter label,
         #activity-log-table_wrapper .dataTables_info {
-            color: #a1a1aa;
-            font-size: 0.8125rem;
+            align-items: center;
+            color: #64748b;
+            display: inline-flex;
+            font-size: 0.68rem;
+            font-weight: 500;
+            gap: 0.35rem;
         }
 
         #activity-log-table_wrapper .dataTables_length select,
         #activity-log-table_wrapper .dataTables_filter input {
-            border: 1px solid rgba(63, 63, 70, 0.9);
+            background: #fff;
+            border: 1px solid #dbe4f0;
             border-radius: 9999px;
-            background: rgba(24, 24, 27, 0.95);
-            color: #f4f4f5;
-            min-height: 2.15rem;
-            padding: 0.35rem 0.85rem;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+            color: #0f172a;
+            font-size: 0.7rem;
+            min-height: 1.95rem;
             outline: none;
+            padding: 0.3rem 0.75rem;
+        }
+
+        #activity-log-table_wrapper .dataTables_filter {
+            display: flex;
+            justify-content: flex-end;
         }
 
         #activity-log-table_wrapper .dataTables_filter input {
-            margin-left: 0.5rem;
-            width: 15rem;
+            margin-left: 0.4rem;
+            width: 12rem;
         }
 
         #activity-log-table {
-            color: #e4e4e7;
+            border-collapse: separate;
+            border-spacing: 0;
+            color: #0f172a;
         }
 
         #activity-log-table thead th {
-            background: rgba(9, 9, 11, 0.82);
-            border-bottom: 1px solid rgba(39, 39, 42, 1);
-            color: #a1a1aa;
-            font-size: 0.7rem;
+            background: #fbfdff;
+            border-bottom: 1px solid #e8eef6;
+            color: #8ba0c0;
+            font-size: 0.64rem;
             font-weight: 700;
             letter-spacing: 0.18em;
-            padding: 0.85rem 1.1rem;
+            padding: 0.68rem 0.9rem;
             text-transform: uppercase;
         }
 
         #activity-log-table tbody td {
-            border-top: 1px solid rgba(39, 39, 42, 0.9);
-            padding: 0.85rem 1.1rem;
-            vertical-align: top;
+            background: #fff;
+            border-bottom: 1px solid #edf2f7;
+            font-size: 0.76rem;
+            padding: 0.78rem 0.9rem;
+            vertical-align: middle;
         }
 
-        #activity-log-table tbody tr {
-            background: transparent;
-            transition: background-color 0.2s ease;
+        #activity-log-table tbody tr:hover td {
+            background: #f8fbff;
         }
 
-        #activity-log-table tbody tr:hover {
-            background: rgba(39, 39, 42, 0.34);
+        .data-table-title {
+            color: #0f172a;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .data-table-subtle {
+            color: #64748b;
+            font-size: 0.74rem;
+        }
+
+        .data-table-badge {
+            border: 1px solid;
+            border-radius: 9999px;
+            display: inline-flex;
+            font-size: 0.64rem;
+            font-weight: 600;
+            line-height: 1;
+            padding: 0.25rem 0.48rem;
+        }
+
+        .data-table-badge.is-active {
+            background: #ecfdf3;
+            border-color: #a7f3d0;
+            color: #047857;
         }
 
         #activity-log-table_wrapper .dataTables_paginate .paginate_button {
-            border: 0 !important;
+            background: #fff !important;
+            border: 1px solid #dbe4f0 !important;
             border-radius: 9999px;
-            color: #d4d4d8 !important;
+            color: #475569 !important;
+            font-size: 0.68rem !important;
             margin-left: 0.25rem;
-            min-width: 2rem;
-            padding: 0.35rem 0.7rem !important;
-        }
-
-        #activity-log-table_wrapper .dataTables_paginate .paginate_button:hover {
-            background: rgba(39, 39, 42, 0.9) !important;
-            color: #fff !important;
+            min-width: 1.85rem;
+            padding: 0.24rem 0.56rem !important;
         }
 
         #activity-log-table_wrapper .dataTables_paginate .paginate_button.current {
-            background: #f4f4f5 !important;
-            color: #111827 !important;
+            background: #0f172a !important;
+            border-color: #0f172a !important;
+            color: #fff !important;
         }
 
         #activity-log-table_wrapper .dataTables_processing {
-            background: rgba(9, 9, 11, 0.95);
-            border: 1px solid rgba(63, 63, 70, 0.9);
+            background: #fff;
+            border: 1px solid #dbe4f0;
             border-radius: 9999px;
-            box-shadow: none;
-            color: #f4f4f5;
+            box-shadow: 0 12px 30px rgba(148, 163, 184, 0.18);
+            color: #0f172a;
+            font-size: 0.68rem;
             padding: 0.5rem 1rem;
+        }
+
+        .dark .page-stat-card,
+        .dark #activity-log-table_wrapper .dataTables_length select,
+        .dark #activity-log-table_wrapper .dataTables_filter input,
+        .dark #activity-log-table tbody td,
+        .dark #activity-log-table_wrapper .dataTables_paginate .paginate_button,
+        .dark #activity-log-table_wrapper .dataTables_processing {
+            background: #09090b !important;
+            border-color: #27272a !important;
+            color: #f4f4f5 !important;
+        }
+
+        .dark .page-stat-label,
+        .dark #activity-log-table_wrapper .dataTables_length label,
+        .dark #activity-log-table_wrapper .dataTables_filter label,
+        .dark #activity-log-table_wrapper .dataTables_info,
+        .dark #activity-log-table thead th,
+        .dark .data-table-subtle {
+            color: #94a3b8;
+        }
+
+        .dark .page-stat-value,
+        .dark .data-table-title,
+        .dark #activity-log-table {
+            color: #fafafa;
+        }
+
+        .dark #activity-log-table thead th {
+            background: #111827;
+            border-bottom-color: #27272a;
+        }
+
+        .dark #activity-log-table tbody td {
+            border-bottom-color: #27272a;
         }
     </style>
 
     <script>
         const initActivityLogDataTable = () => {
-            if (typeof $ === 'undefined' || typeof $.fn.DataTable === 'undefined') {
-                return;
-            }
+            if (typeof $ === 'undefined' || typeof $.fn.DataTable === 'undefined') return;
 
             const table = $('#activity-log-table');
-
-            if (!table.length) {
-                return;
-            }
-
-            if ($.fn.DataTable.isDataTable(table)) {
-                table.DataTable().destroy();
-            }
+            if (!table.length) return;
+            if ($.fn.DataTable.isDataTable(table)) table.DataTable().destroy();
 
             const renderDateCell = (value) => {
-                if (!value) {
-                    return '<span class="text-zinc-500">N/A</span>';
-                }
+                if (!value) return '<span class="data-table-subtle">N/A</span>';
 
                 const date = new Date(value.replace(' ', 'T'));
-
-                if (Number.isNaN(date.getTime())) {
-                    return value;
-                }
+                if (Number.isNaN(date.getTime())) return value;
 
                 const formattedDate = date.toLocaleDateString(undefined, {
                     month: 'short',
@@ -209,17 +298,11 @@
 
                 return `
                     <div class="leading-tight">
-                        <div class="font-medium text-zinc-100">${formattedDate}</div>
-                        <div class="mt-1 text-[11px] text-zinc-500">${formattedTime}</div>
+                        <div class="data-table-title">${formattedDate}</div>
+                        <div class="mt-1 data-table-subtle">${formattedTime}</div>
                     </div>
                 `;
             };
-
-            const renderBadge = (value, classes) => `
-                <span class="inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${classes}">
-                    ${value || 'N/A'}
-                </span>
-            `;
 
             table.DataTable({
                 processing: true,
@@ -230,45 +313,24 @@
                 lengthMenu: [[10, 25, 50], [10, 25, 50]],
                 autoWidth: false,
                 searchDelay: 300,
-                dom: '<"flex flex-col gap-3 border-b border-zinc-800 px-4 py-3 md:flex-row md:items-center md:justify-between"lf>rt<"flex flex-col gap-3 border-t border-zinc-800 px-4 py-3 md:flex-row md:items-center md:justify-between"ip>',
+                dom: '<"flex flex-col gap-2 border-b border-slate-200 px-4 py-3 md:flex-row md:items-center md:justify-between dark:border-zinc-800"lf>rt<"flex flex-col gap-2 border-t border-slate-200 px-4 py-3 md:flex-row md:items-center md:justify-between dark:border-zinc-800"ip>',
                 columns: [
-                    {
-                        data: 'created_at',
-                        render: (data) => renderDateCell(data),
-                    },
-                    {
-                        data: 'user',
-                        render: (data) => `<span class="font-medium text-zinc-100">${data || 'System'}</span>`,
-                    },
-                    {
-                        data: 'action',
-                        render: (data) => renderBadge(data, 'border-sky-900/80 bg-sky-950/50 text-sky-300'),
-                    },
-                    {
-                        data: 'route_name',
-                        render: (data) => renderBadge(data, 'border-zinc-800 bg-zinc-800/90 text-zinc-200'),
-                    },
-                    {
-                        data: 'ip_address',
-                        render: (data) => `<span class="text-zinc-200">${data || 'N/A'}</span>`,
-                    },
-                    {
-                        data: 'description',
-                        render: (data) => `<span class="text-zinc-300">${data || 'No description'}</span>`,
-                    },
+                    { data: 'created_at', render: (data) => renderDateCell(data) },
+                    { data: 'user', render: (data) => `<span class="data-table-title">${data || 'System'}</span>` },
+                    { data: 'action', render: (data) => `<span class="data-table-badge is-active">${data || 'N/A'}</span>` },
+                    { data: 'route_name', render: (data) => `<span class="data-table-subtle">${data || 'N/A'}</span>` },
+                    { data: 'ip_address', render: (data) => `<span class="data-table-subtle">${data || 'N/A'}</span>` },
+                    { data: 'description', render: (data) => `<span class="data-table-subtle">${data || 'No description'}</span>` },
                 ],
                 language: {
                     emptyTable: 'No activity logs found',
                     zeroRecords: 'No matching records found',
                     search: '',
-                    searchPlaceholder: 'Search logs',
+                    searchPlaceholder: 'Search...',
                     lengthMenu: 'Show _MENU_',
                     info: 'Showing _START_ to _END_ of _TOTAL_ entries',
                     infoEmpty: 'No entries available',
-                    paginate: {
-                        previous: 'Prev',
-                        next: 'Next',
-                    },
+                    paginate: { previous: 'Prev', next: 'Next' },
                 },
             });
         };

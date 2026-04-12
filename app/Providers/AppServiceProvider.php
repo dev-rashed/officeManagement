@@ -9,6 +9,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\ServiceProvider;
@@ -34,6 +35,21 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->registerTwoFactorListeners();
+        $this->registerPermissions();
+    }
+
+    /**
+     * Register permission gates.
+     */
+    protected function registerPermissions(): void
+    {
+        Gate::before(fn (User $user, string $ability) => $user->hasPermission('*') ? true : null);
+
+        Gate::define('finance.view', fn (User $user): bool => $user->hasPermission('finance.view'));
+        Gate::define('finance.manage', fn (User $user): bool => $user->hasPermission('finance.manage'));
+        Gate::define('approvals.manage', fn (User $user): bool => $user->hasPermission('approvals.manage'));
+        Gate::define('users.manage', fn (User $user): bool => $user->hasPermission('users.manage'));
+        Gate::define('settings.manage', fn (User $user): bool => $user->hasPermission('settings.manage'));
     }
 
     /**
