@@ -428,6 +428,7 @@
     </div>
 
     <script>
+        (() => {
         const CSRF = '{{ csrf_token() }}';
         const STORE_URL = @js(route('income.categories.store'));
 
@@ -650,5 +651,6 @@
 
         document.addEventListener('DOMContentLoaded', initTable);
         document.addEventListener('livewire:navigated', initTable);
+        })();
     </script>
 </x-layouts::app>

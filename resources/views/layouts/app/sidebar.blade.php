@@ -33,6 +33,21 @@
                     <flux:sidebar.item icon="document-text" :href="route('expense.index')" :current="request()->routeIs('expense.*')" wire:navigate>
                         {{ __('Expense Management') }}
                     </flux:sidebar.item>
+                    <flux:navlist.group
+                        expandable
+                        :expanded="request()->routeIs('projects.*')"
+                        :heading="__('Project Management')"
+                    >
+                        <flux:sidebar.item :href="route('projects.index')" :current="request()->routeIs('projects.index')" wire:navigate>
+                            {{ __('Projects') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item :href="route('projects.categories.index')" :current="request()->routeIs('projects.categories.*')" wire:navigate>
+                            {{ __('Categories') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item :href="route('projects.trainees.index')" :current="request()->routeIs('projects.trainees.*')" wire:navigate>
+                            {{ __('Trainee') }}
+                        </flux:sidebar.item>
+                    </flux:navlist.group>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 

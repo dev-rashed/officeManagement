@@ -4,6 +4,9 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\Finance\IncomeCategoryController;
 use App\Http\Controllers\IncomeController;
+use App\Http\Controllers\ProjectCategoryController;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\TraineeController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login')->name('home');
@@ -43,6 +46,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('expense/{expense}', [ExpenseController::class, 'update'])->name('expense.update');
     Route::delete('expense/{expense}', [ExpenseController::class, 'destroy'])->name('expense.destroy');
     Route::post('expense/{expense}/approve', [ExpenseController::class, 'approve'])->name('expense.approve');
+
+    // Projects
+    Route::get('projects', [ProjectController::class, 'index'])->name('projects.index');
+    Route::get('projects/data', [ProjectController::class, 'data'])->name('projects.data');
+    Route::post('projects', [ProjectController::class, 'store'])->name('projects.store');
+    Route::put('projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
+    Route::delete('projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
+
+    Route::get('projects/categories', [ProjectCategoryController::class, 'index'])->name('projects.categories.index');
+    Route::get('projects/categories/data', [ProjectCategoryController::class, 'data'])->name('projects.categories.data');
+    Route::post('projects/categories', [ProjectCategoryController::class, 'store'])->name('projects.categories.store');
+    Route::put('projects/categories/{category}', [ProjectCategoryController::class, 'update'])->name('projects.categories.update');
+    Route::delete('projects/categories/{category}', [ProjectCategoryController::class, 'destroy'])->name('projects.categories.destroy');
+
+    Route::get('projects/trainees', [TraineeController::class, 'index'])->name('projects.trainees.index');
+    Route::get('projects/trainees/data', [TraineeController::class, 'data'])->name('projects.trainees.data');
+    Route::post('projects/trainees', [TraineeController::class, 'store'])->name('projects.trainees.store');
+    Route::post('projects/trainees/{trainee}', [TraineeController::class, 'update'])->name('projects.trainees.update');
+    Route::delete('projects/trainees/{trainee}', [TraineeController::class, 'destroy'])->name('projects.trainees.destroy');
 });
 
 require __DIR__.'/settings.php';
