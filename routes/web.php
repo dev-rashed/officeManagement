@@ -9,7 +9,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TraineeController;
 use Illuminate\Support\Facades\Route;
 
-Route::redirect('/', '/login')->name('home');
+require __DIR__.'/public.php';
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
@@ -68,3 +68,35 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__.'/settings.php';
+
+// CMS Routes
+Route::middleware(['auth', 'verified'])->prefix('admin/cms')->group(function () {
+    Route::resource('page-sections', \App\Http\Controllers\Admin\PageSectionController::class);
+    Route::get('page-sections/data', [\App\Http\Controllers\Admin\PageSectionController::class, 'data'])->name('page-sections.data');
+    Route::resource('team-members', \App\Http\Controllers\Admin\TeamMemberController::class);
+    Route::get('team-members/data', [\App\Http\Controllers\Admin\TeamMemberController::class, 'data'])->name('team-members.data');
+    Route::resource('portfolio', \App\Http\Controllers\Admin\PortfolioItemController::class);
+    Route::get('portfolio/data', [\App\Http\Controllers\Admin\PortfolioItemController::class, 'data'])->name('portfolio.data');
+    Route::get('contact-settings', [\App\Http\Controllers\Admin\ContactSettingController::class, 'edit'])->name('contact-settings.edit');
+    Route::put('contact-settings', [\App\Http\Controllers\Admin\ContactSettingController::class, 'update'])->name('contact-settings.update');
+});
+
+// Asset Management Routes
+Route::middleware(['auth', 'verified'])->resource('assets', \App\Http\Controllers\AssetController::class);
+Route::get('assets/data', [\App\Http\Controllers\AssetController::class, 'data'])->name('assets.data');
+
+// Course Management Routes
+Route::middleware(['auth', 'verified'])->prefix('admin')->group(function () {
+    Route::resource('courses', \App\Http\Controllers\Admin\CourseController::class);
+    Route::get('courses/data', [\App\Http\Controllers\Admin\CourseController::class, 'data'])->name('admin.courses.data');
+    Route::resource('course-categories', \App\Http\Controllers\Admin\CourseCategoryController::class);
+    Route::get('course-categories/data', [\App\Http\Controllers\Admin\CourseCategoryController::class, 'data'])->name('admin.course-categories.data');
+});
+
+// Service Management Routes
+Route::middleware(['auth', 'verified'])->prefix('admin')->group(function () {
+    Route::resource('services', \App\Http\Controllers\Admin\ServiceController::class);
+    Route::get('services/data', [\App\Http\Controllers\Admin\ServiceController::class, 'data'])->name('admin.services.data');
+    Route::resource('service-categories', \App\Http\Controllers\Admin\ServiceCategoryController::class);
+    Route::get('service-categories/data', [\App\Http\Controllers\Admin\ServiceCategoryController::class, 'data'])->name('admin.service-categories.data');
+});

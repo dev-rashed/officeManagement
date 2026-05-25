@@ -12,12 +12,16 @@ return [
             'approvals.manage',
             'users.manage',
             'settings.manage',
+            'cms.manage',
+            'assets.manage',
         ],
 
         User::ROLE_ACCOUNTANT => [
             'finance.view',
             'finance.manage',
             'approvals.manage',
+            'cms.manage',
+            'assets.manage',
         ],
 
         User::ROLE_CHAIRMAN => [
