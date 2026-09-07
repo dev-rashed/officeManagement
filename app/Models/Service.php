@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Service extends Model
 {
-    #[Fillable([
+    protected $fillable = [
         'title',
         'slug',
         'short_description',
@@ -16,7 +16,7 @@ class Service extends Model
         'status',
         'show_on_homepage',
         'sort_order',
-    ])]
+    ];
 
     public function category()
     {

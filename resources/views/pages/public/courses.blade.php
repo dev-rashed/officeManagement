@@ -19,7 +19,7 @@
                         <img src="{{ asset('storage/' . $course->featured_image) }}" alt="{{ $course->title }}" width="640" height="360" loading="lazy">
                     </div>
                     @endif
-                    <span class="course-tag">{{ $course->category ?? 'Course' }}</span>
+                    <span class="course-tag">{{ $course->category?->name ?? 'Course' }}</span>
                     <h3>{{ $course->title }}</h3>
                     <p>{{ $course->short_description }}</p>
                     <div class="course-meta">

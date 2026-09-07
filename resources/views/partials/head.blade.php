@@ -19,3 +19,7 @@
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 <script src="{{ asset('js/iziToast.js') }}"></script>
 @fluxAppearance
+<script>
+    // Default to light mode when no explicit appearance has been chosen.
+    window.Flux.applyAppearance(window.localStorage.getItem('flux.appearance') || 'light')
+</script>

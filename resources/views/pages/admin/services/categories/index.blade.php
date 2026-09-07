@@ -3,16 +3,17 @@
 @section('title', 'Service Categories Management')
 
 @section('content')
-<x-flux::page-header title="Service Categories">
-    <x-flux::toolbar>
-        <x-flux::button href="{{ route('admin.service-categories.create') }}" variant="primary">
-            Add Category
-        </x-flux::toolbar>
-</x-flux::page-header>
+<div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+        <h1 class="text-lg font-semibold tracking-tight text-zinc-900 dark:text-white">Service Categories</h1>
+    </div>
+    <a href="{{ route('admin.service-categories.create') }}" class="inline-flex items-center justify-center rounded-xl bg-sky-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-sky-700">Add Category</a>
+</div>
 
 <div class="space-y-4">
-    <div class="p-4 bg-white rounded-lg shadow">
-        <table class="w-full" id="serviceCategoriesTable">
+    <div class="admin-table-shell">
+        <div class="overflow-x-auto">
+        <table class="admin-data-table" id="serviceCategoriesTable">
             <thead>
                 <tr class="border-b">
                     <th class="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
@@ -26,6 +27,7 @@
                 <!-- Data will be loaded via AJAX -->
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 @endsection
@@ -51,3 +53,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
+

@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', '{{ $service->title }} | Services | HashTag')
+@section('title', $service->title . ' | Services | HashTag')
 
 @section('content')
 <section class="section" style="min-height: 500px;">

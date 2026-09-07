@@ -1,4 +1,23 @@
 document.addEventListener('DOMContentLoaded', () => {
+    if (window.jQuery?.fn?.DataTable) {
+        jQuery.extend(true, jQuery.fn.dataTable.defaults, {
+            pageLength: 20,
+            lengthMenu: [[10, 20, 50], [10, 20, 50]],
+            autoWidth: false,
+            searchDelay: 300,
+            dom: '<"flex flex-col gap-2 border-b border-slate-200 px-4 py-3 md:flex-row md:items-center md:justify-between dark:border-zinc-800"lf>rt<"flex flex-col gap-2 border-t border-slate-200 px-4 py-3 md:flex-row md:items-center md:justify-between dark:border-zinc-800"ip>',
+            language: {
+                search: '',
+                searchPlaceholder: 'Search...',
+                lengthMenu: 'Show _MENU_',
+                info: 'Showing _START_ to _END_ of _TOTAL_ entries',
+                infoEmpty: 'No entries available',
+                zeroRecords: 'No matching records found',
+                paginate: { previous: 'Prev', next: 'Next' },
+            },
+        });
+    }
+
     const root = document.getElementById('global-popup');
 
     if (!root) {

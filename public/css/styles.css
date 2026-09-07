@@ -882,7 +882,8 @@ p {
     font-weight: 800;
 }
 
-.work {
+.work,
+.portfolio {
     background: var(--white);
 }
 
@@ -1290,6 +1291,7 @@ blockquote {
     display: grid;
     grid-template-columns: 1.3fr repeat(3, 1fr);
     gap: 2rem;
+    margin-bottom: 2rem;
 }
 
 .footer .brand-name,
@@ -1334,6 +1336,11 @@ blockquote {
 .footer-bottom span {
     color: rgba(255, 255, 255, 0.44);
     font-size: 0.86rem;
+}
+
+.footer-bottom p {
+    max-width: none;
+    margin-top: 0;
 }
 
 .reveal {
@@ -1423,9 +1430,15 @@ blockquote {
 
     .nav-panel {
         position: fixed;
-        inset: 78px 1rem auto;
+        top: 78px;
+        right: 1rem;
+        left: 1rem;
+        bottom: auto;
         display: grid;
         gap: 0.3rem;
+        max-height: calc(100dvh - 96px);
+        height: auto;
+        overflow-y: auto;
         padding: 0.8rem;
         border: 1px solid rgba(203, 213, 209, 0.7);
         border-radius: var(--radius);

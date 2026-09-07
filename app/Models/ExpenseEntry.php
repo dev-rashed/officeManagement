@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 #[Fillable([
     'title',
-    'expense_category',
+    'expense_category_id',
     'amount',
     'date',
     'payment_method',
@@ -66,6 +66,11 @@ class ExpenseEntry extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(ExpenseCategory::class, 'expense_category_id');
     }
 
     public function approvals(): MorphMany

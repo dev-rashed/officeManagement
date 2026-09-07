@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Asset extends Model
 {
-    #[Fillable([
+    protected $fillable = [
         'name',
         'code_tag_number',
         'category',
@@ -23,9 +23,10 @@ class Asset extends Model
         'status',
         'notes',
         'attachment_path',
-    ])]
+    ];
 
     protected $casts = [
+        'purchase_date' => 'date',
         'purchase_cost' => 'decimal:2',
         'current_value' => 'decimal:2',
     ];

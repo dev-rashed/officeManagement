@@ -25,7 +25,7 @@ class CourseController extends Controller
             $length = $request->input('length');
             $search = $request->input('search.value');
             $orderColumnIndex = $request->input('order.0.column');
-            $orderDirection = $request->input('order.0.dir');
+            $orderDirection = in_array($request->input('order.0.dir'), ['asc', 'desc'], true) ? $request->input('order.0.dir') : 'asc';
 
             $query = Course::with('category');
 
@@ -65,8 +65,7 @@ class CourseController extends Controller
                             <i class="fi fi-rr-edit"></i>
                         </a>
                         <form action="' . route('admin.courses.destroy', $course->id) . '" method="POST" onsubmit="return confirm(\'Are you sure you want to delete this course?\');" style="display: inline;">
-                            @csrf
-                            @method("DELETE")
+                            ' . csrf_field() . method_field('DELETE') . '
                             <button type="submit" class="btn btn-outline-danger btn-sm">
                                 <i class="fi fi-rr-trash"></i>
                             </button>

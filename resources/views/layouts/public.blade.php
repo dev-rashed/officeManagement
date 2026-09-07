@@ -15,6 +15,9 @@
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
 </head>
 <body>
+    @php
+        $navClass = fn (array|string $routes): string => request()->routeIs(...(array) $routes) ? 'is-active' : '';
+    @endphp
     <a class="skip-link" href="#main">Skip to content</a>
 
     <header class="site-header" data-header>
@@ -34,14 +37,14 @@
             </button>
 
             <div class="nav-panel" data-nav-panel>
-                <a href="{{ route('services.index') }}">Services</a>
-                <a href="{{ route('courses.index') }}">Courses</a>
-                <a href="{{ route('about') }}">About</a>
-                <a href="{{ route('mission') }}">Mission</a>
-                <a href="{{ route('vision') }}">Vision</a>
-                <a href="{{ route('team') }}">Team</a>
-                <a href="{{ route('work') }}">Work</a>
-                <a href="{{ route('contact') }}" class="nav-cta">Get a Quote</a>
+                <a href="{{ route('services.index') }}" class="{{ $navClass('services.*') }}">Services</a>
+                <a href="{{ route('courses.index') }}" class="{{ $navClass('courses.*') }}">Courses</a>
+                <a href="{{ route('about') }}" class="{{ $navClass('about') }}">About</a>
+                <a href="{{ route('mission') }}" class="{{ $navClass('mission') }}">Mission</a>
+                <a href="{{ route('vision') }}" class="{{ $navClass('vision') }}">Vision</a>
+                <a href="{{ route('team') }}" class="{{ $navClass('team') }}">Team</a>
+                <a href="{{ route('portfolio') }}" class="{{ $navClass('portfolio') }}">Portfolio</a>
+                <a href="{{ route('contact') }}" class="nav-cta {{ $navClass('contact') }}">Get a Quote</a>
             </div>
         </nav>
     </header>
@@ -52,7 +55,7 @@
 
     <footer class="footer" data-footer>
         <div class="container">
-            <div style="display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+            <div class="footer-grid">
                 <div>
                     <div class="brand" style="margin-bottom: 1rem;">
                         <span class="brand-mark">H</span>
@@ -85,11 +88,11 @@
                     <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">Contact</h3>
                     <ul style="list-style: none; padding: 0;">
                         <li style="margin-bottom: 0.5rem;"><a href="{{ route('contact') }}" style="color: rgba(255, 255, 255, 0.8); text-decoration: none;">Get a Quote</a></li>
-                        <li style="margin-bottom: 0.5rem;"><a href="{{ route('work') }}" style="color: rgba(255, 255, 255, 0.8); text-decoration: none;">Our Work</a></li>
+                        <li style="margin-bottom: 0.5rem;"><a href="{{ route('portfolio') }}" style="color: rgba(255, 255, 255, 0.8); text-decoration: none;">Portfolio</a></li>
                     </ul>
                 </div>
             </div>
-            <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 2rem; text-align: center; color: rgba(255, 255, 255, 0.6); font-size: 0.9rem;">
+            <div class="footer-bottom" style="text-align: center;">
                 <p>&copy; {{ date('Y') }} HashTag Research & Technology Ltd. All rights reserved.</p>
             </div>
         </div>

@@ -59,7 +59,7 @@
                             @endphp
                             <tr>
                                 <td><span class="data-table-title">{{ $expense->title }}</span></td>
-                                <td><span class="data-table-subtle">{{ $expense->expense_category }}</span></td>
+                                <td><span class="data-table-subtle">{{ $expense->category?->name ?? '—' }}</span></td>
                                 <td>&#2547; {{ number_format($expense->amount, 2) }}</td>
                                 <td>{{ $expense->date->format('Y-m-d') }}</td>
                                 <td><span class="data-table-badge {{ $statusClass }}">{{ $expense->statusLabel() }}</span></td>

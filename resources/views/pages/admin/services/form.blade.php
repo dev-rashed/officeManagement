@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', '{{ $service ? "Edit" : "Add New" }} Service')
+@section('title', ($service ? 'Edit' : 'Add New').' Service')
 
 @section('content')
 <div class="max-w-4xl mx-auto p-4">
-    <div class="bg-white rounded-lg shadow">
+    <div class="admin-form-card">
         <div class="px-6 py-4 border-b">
             <h2 class="text-xl font-semibold">
                 {{ $service ? "Edit" : "Add New" }} Service
@@ -42,7 +42,7 @@
                     <label for="short_description" class="block text-sm font-medium text-gray-700 mb-1">Short Description</label>
                     <textarea id="short_description" name="short_description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required>{{ old('short_description', $service?->short_description ?? '') }}</textarea>
                     @error('short_description')
-                        <p class="mt-1 text-sm text-red-600>{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -70,7 +70,7 @@
                         <p class="mt-2 text-xs text-gray-500">Max size: 5MB</p>
                     @endif
                     @error('featured_image')
-                        <p class="mt-1 text-sm text-red-600>{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -83,7 +83,7 @@
                         @endforeach
                     </select>
                     @error('service_category_id')
-                        <p class="mt-1 text-sm text-red-600>{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -100,18 +100,19 @@
                         </div>
                     </div>
                     @error('status')
-                        <p class="mt-1 text-sm text-red-600>{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
                     <label for="show_on_homepage" class="block text-sm font-medium text-gray-700 mb-1">Show on Homepage</label>
                     <div class="flex items-center">
+                        <input type="hidden" name="show_on_homepage" value="0">
                         <input type="checkbox" id="show_on_homepage" name="show_on_homepage" value="1" {{ old('show_on_homepage', $service?->show_on_homepage ?? false) ? 'checked' : '' }} class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
                         <span class="ml-2 text-sm font-medium text-gray-700">Display on homepage</span>
                     </div>
                     @error('show_on_homepage')
-                        <p class="mt-1 text-sm text-red-600>{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -119,14 +120,14 @@
                     <label for="sort_order" class="block text-sm font-medium text-gray-700 mb-1">Sort Order</label>
                     <input type="number" id="sort_order" name="sort_order" value="{{ old('sort_order', $service?->sort_order ?? 0) }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" min="0">
                     @error('sort_order')
-                        <p class="mt-1 text-sm text-red-600>{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
             </div>
 
             <div class="px-6 py-4 border-t">
-                <div class="flex justify-end space-x-3">
+                <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
                     <a href="{{ route('admin.services.index') }}" class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 text-sm font-medium">
                         Cancel
                     </a>

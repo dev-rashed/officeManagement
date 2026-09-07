@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class CourseCategory extends Model
 {
-    #[Fillable(['name', 'slug', 'description', 'status'])]
+    protected $fillable = ['name', 'slug', 'description', 'status'];
 
     public function courses()
     {

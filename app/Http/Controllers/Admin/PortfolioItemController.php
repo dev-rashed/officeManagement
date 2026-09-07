@@ -24,7 +24,7 @@ class PortfolioItemController extends Controller
             $length = $request->input('length');
             $search = $request->input('search.value');
             $orderColumnIndex = $request->input('order.0.column');
-            $orderDirection = $request->input('order.0.dir');
+            $orderDirection = in_array($request->input('order.0.dir'), ['asc', 'desc'], true) ? $request->input('order.0.dir') : 'asc';
 
             $query = PortfolioItem::query();
 
@@ -61,8 +61,7 @@ class PortfolioItemController extends Controller
                             <i class="fi fi-rr-edit"></i>
                         </a>
                         <form action="' . route('admin.portfolio.destroy', $item->id) . '" method="POST" onsubmit="return confirm(\'Are you sure you want to delete this portfolio item?\');" style="display: inline;">
-                            @csrf
-                            @method("DELETE")
+                            ' . csrf_field() . method_field('DELETE') . '
                             <button type="submit" class="btn btn-outline-danger btn-sm">
                                 <i class="fi fi-rr-trash"></i>
                             </button>
@@ -118,22 +117,22 @@ class PortfolioItemController extends Controller
             ->with('success', 'Portfolio item created successfully.');
     }
 
-    public function edit(PortfolioItem $item)
+    public function edit(PortfolioItem $portfolio)
     {
         Gate::authorize('cms.manage');
         return view('pages.admin.cms.portfolio.form', [
-            'item' => $item,
+            'item' => $portfolio,
             'mode' => 'edit'
         ]);
     }
 
-    public function update(Request $request, PortfolioItem $item)
+    public function update(Request $request, PortfolioItem $portfolio)
     {
         Gate::authorize('cms.manage');
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'slug' => 'required|string|max:100|unique:portfolio_items,slug,' . $item->id,
+            'slug' => 'required|string|max:100|unique:portfolio_items,slug,' . $portfolio->id,
             'description' => 'nullable|string',
             'image_path' => 'nullable|image|max:5120',
             'technologies' => 'nullable|array',
@@ -144,28 +143,28 @@ class PortfolioItemController extends Controller
         ]);
 
         if ($request->hasFile('image_path')) {
-            if ($item->image_path) {
-                Storage::disk('public')->delete($item->image_path);
+            if ($portfolio->image_path) {
+                Storage::disk('public')->delete($portfolio->image_path);
             }
             $path = $request->file('image_path')->store('uploads/portfolio', 'public');
             $validated['image_path'] = $path;
         }
 
-        $item->update($validated);
+        $portfolio->update($validated);
 
         return redirect()->route('admin.portfolio.index')
             ->with('success', 'Portfolio item updated successfully.');
     }
 
-    public function destroy(PortfolioItem $item)
+    public function destroy(PortfolioItem $portfolio)
     {
         Gate::authorize('cms.manage');
 
-        if ($item->image_path) {
-            Storage::disk('public')->delete($item->image_path);
+        if ($portfolio->image_path) {
+            Storage::disk('public')->delete($portfolio->image_path);
         }
 
-        $item->delete();
+        $portfolio->delete();
 
         return redirect()->route('admin.portfolio.index')
             ->with('success', 'Portfolio item deleted successfully.');

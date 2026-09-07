@@ -117,6 +117,8 @@ class IncomeController extends Controller
 
     public function show(IncomeEntry $income)
     {
+        $income->load(['approvals.approver']);
+
         return view('pages.finance.income.show', compact('income'));
     }
 
@@ -168,7 +170,11 @@ class IncomeController extends Controller
     {
         $request->validate([
             'action'   => ['required', 'string', 'in:approve,reject,send_back'],
-            'comments' => ['nullable', 'string'],
+            // A rejection or a send-back must say why -- the person whose entry
+            // it is has to know what to fix.
+            'comments' => ['required_if:action,reject,send_back', 'nullable', 'string', 'max:2000'],
+        ], [
+            'comments.required_if' => 'Please give a reason when rejecting or sending an entry back.',
         ]);
 
         if (! $income->canBeApprovedBy($request->user())) {

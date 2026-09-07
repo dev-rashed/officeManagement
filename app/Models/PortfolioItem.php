@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PortfolioItem extends Model
 {
-    #[Fillable([
+    protected $fillable = [
         'title',
         'slug',
         'description',
@@ -15,7 +15,7 @@ class PortfolioItem extends Model
         'link',
         'status',
         'sort_order',
-    ])]
+    ];
 
     protected $casts = [
         'technologies' => 'array',

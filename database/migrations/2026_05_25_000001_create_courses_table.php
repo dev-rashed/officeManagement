@@ -31,7 +31,7 @@ return new class extends Migration
             $table->string('schedule_batch')->nullable();
             $table->string('fee')->nullable();
             $table->string('instructor_name')->nullable();
-            $table->json('course_outline')->nullable();
+            $table->longText('course_outline')->nullable();
             $table->integer('sort_order')->default(0);
             $table->string('status')->default('draft');
             $table->timestamps();

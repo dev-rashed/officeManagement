@@ -23,7 +23,7 @@ class CourseCategoryController extends Controller
             $length = $request->input('length');
             $search = $request->input('search.value');
             $orderColumnIndex = $request->input('order.0.column');
-            $orderDirection = $request->input('order.0.dir');
+            $orderDirection = in_array($request->input('order.0.dir'), ['asc', 'desc'], true) ? $request->input('order.0.dir') : 'asc';
 
             $query = CourseCategory::query();
 
@@ -54,8 +54,7 @@ class CourseCategoryController extends Controller
                             <i class="fi fi-rr-edit"></i>
                         </a>
                         <form action="' . route('admin.course-categories.destroy', $category->id) . '" method="POST" onsubmit="return confirm(\'Are you sure you want to delete this category?\');" style="display: inline;">
-                            @csrf
-                            @method("DELETE")
+                            ' . csrf_field() . method_field('DELETE') . '
                             <button type="submit" class="btn btn-outline-danger btn-sm">
                                 <i class="fi fi-rr-trash"></i>
                             </button>
@@ -101,37 +100,37 @@ class CourseCategoryController extends Controller
             ->with('success', 'Course category created successfully.');
     }
 
-    public function edit(CourseCategory $category)
+    public function edit(CourseCategory $course_category)
     {
         Gate::authorize('cms.manage');
         return view('pages.admin.courses.categories.form', [
-            'category' => $category,
+            'category' => $course_category,
             'mode' => 'edit'
         ]);
     }
 
-    public function update(Request $request, CourseCategory $category)
+    public function update(Request $request, CourseCategory $course_category)
     {
         Gate::authorize('cms.manage');
 
         $validated = $request->validate([
             'name' => 'required|string|max:100',
-            'slug' => 'required|string|max:100|unique:course_categories,slug,' . $category->id,
+            'slug' => 'required|string|max:100|unique:course_categories,slug,' . $course_category->id,
             'description' => 'nullable|string',
             'status' => 'required|in:draft,published',
         ]);
 
-        $category->update($validated);
+        $course_category->update($validated);
 
         return redirect()->route('admin.course-categories.index')
             ->with('success', 'Course category updated successfully.');
     }
 
-    public function destroy(CourseCategory $category)
+    public function destroy(CourseCategory $course_category)
     {
         Gate::authorize('cms.manage');
 
-        $category->delete();
+        $course_category->delete();
 
         return redirect()->route('admin.course-categories.index')
             ->with('success', 'Course category deleted successfully.');

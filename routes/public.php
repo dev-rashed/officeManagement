@@ -1,17 +1,19 @@
 <?php
 
 use App\Http\Controllers\Public\CourseController;
+use App\Http\Controllers\Public\PageController;
 use App\Http\Controllers\Public\ServiceController;
 use Illuminate\Support\Facades\Route;
 
 // Public pages
-Route::view('/', 'pages.public.home')->name('home');
-Route::view('/about', 'pages.public.about')->name('about');
-Route::view('/mission', 'pages.public.mission')->name('mission');
-Route::view('/vision', 'pages.public.vision')->name('vision');
-Route::view('/team', 'pages.public.team')->name('team');
-Route::view('/contact', 'pages.public.contact')->name('contact');
-Route::view('/work', 'pages.public.work')->name('work');
+Route::get('/', [PageController::class, 'home'])->name('home');
+Route::get('/about', [PageController::class, 'about'])->name('about');
+Route::get('/mission', [PageController::class, 'mission'])->name('mission');
+Route::get('/vision', [PageController::class, 'vision'])->name('vision');
+Route::get('/team', [PageController::class, 'team'])->name('team');
+Route::get('/contact', [PageController::class, 'contact'])->name('contact');
+Route::redirect('/work', '/portfolio', 301);
+Route::get('/portfolio', [PageController::class, 'portfolio'])->name('portfolio');
 
 // Courses
 Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class TeamMember extends Model
 {
-    #[Fillable([
+    protected $fillable = [
         'name',
         'position',
         'bio',
@@ -16,7 +16,7 @@ class TeamMember extends Model
         'social_links',
         'status',
         'sort_order',
-    ])]
+    ];
 
     protected $casts = [
         'social_links' => 'array',

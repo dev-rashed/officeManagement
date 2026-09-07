@@ -47,9 +47,12 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::define('finance.view', fn (User $user): bool => $user->hasPermission('finance.view'));
         Gate::define('finance.manage', fn (User $user): bool => $user->hasPermission('finance.manage'));
+        Gate::define('finance.categories.manage', fn (User $user): bool => $user->hasPermission('finance.categories.manage'));
         Gate::define('approvals.manage', fn (User $user): bool => $user->hasPermission('approvals.manage'));
         Gate::define('users.manage', fn (User $user): bool => $user->hasPermission('users.manage'));
         Gate::define('settings.manage', fn (User $user): bool => $user->hasPermission('settings.manage'));
+        Gate::define('cms.manage', fn (User $user): bool => $user->hasPermission('cms.manage'));
+        Gate::define('assets.manage', fn (User $user): bool => $user->hasPermission('assets.manage'));
     }
 
     /**

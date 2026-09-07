@@ -3,16 +3,10 @@
 @section('title', 'Assets Management')
 
 @section('content')
-<x-flux::page-header title="Assets">
-    <x-flux::toolbar>
-        <x-flux::button href="{{ route('assets.create') }}" variant="primary">
-            Add Asset
-        </x-flux::button>
-    </x-flux::toolbar>
-</x-flux::page-header>
+<div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h1 class="text-lg font-semibold tracking-tight text-zinc-900 dark:text-white">Assets</h1></div><a href="{{ route('assets.create') }}" class="inline-flex items-center justify-center rounded-xl bg-sky-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-sky-700">Add Asset</a></div>
 
 <div class="space-y-4">
-    <div class="p-4 bg-white rounded-lg shadow">
+    <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         <div class="mb-4">
             <form id="assetFilterForm" class="space-y-4">
                 <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
@@ -69,7 +63,7 @@
                     </div>
 
                     <div class="md:col-span-2 lg:col-span-3">
-                        <div class="flex items-end space-x-3">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
                             <button type="button" id="applyFilters" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
                                 Apply Filters
                             </button>
@@ -82,8 +76,9 @@
             </form>
         </div>
 
-        <div class="p-4 bg-white rounded-lg shadow">
-            <table class="w-full" id="assetsTable">
+        <div class="admin-table-shell">
+            <div class="overflow-x-auto">
+            <table class="admin-data-table" id="assetsTable">
                 <thead>
                     <tr class="border-b">
                         <th class="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
@@ -107,6 +102,7 @@
                     <!-- Data will be loaded via AJAX -->
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
 </div>
@@ -121,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
         serverSide: true,
         ajax: {
             url: "{{ route('assets.data') }}",
-            type: 'POST',
+            type: 'GET',
             data: function (d) {
                 // Add filter data
                 const form = $('#assetFilterForm');
@@ -180,3 +176,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
+

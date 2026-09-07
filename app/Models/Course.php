@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Course extends Model
 {
-    #[Fillable([
+    protected $fillable = [
         'title',
         'slug',
         'short_description',
@@ -22,10 +22,6 @@ class Course extends Model
         'course_outline',
         'sort_order',
         'status',
-    ])]
-
-    protected $casts = [
-        'course_outline' => 'array',
     ];
 
     public function category()

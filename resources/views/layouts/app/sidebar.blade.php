@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         @include('partials.head')
     </head>
@@ -26,13 +26,26 @@
                         <flux:sidebar.item :href="route('income.index')" :current="request()->routeIs('income.index', 'income.create', 'income.show', 'income.edit')" wire:navigate>
                             {{ __('Incomes') }}
                         </flux:sidebar.item>
-                        <flux:sidebar.item :href="route('income.categories')" :current="request()->routeIs('income.categories')" wire:navigate>
-                            {{ __('Categories') }}
-                        </flux:sidebar.item>
+                        @can('finance.categories.manage')
+                            <flux:sidebar.item :href="route('income.categories')" :current="request()->routeIs('income.categories')" wire:navigate>
+                                {{ __('Categories') }}
+                            </flux:sidebar.item>
+                        @endcan
                     </flux:navlist.group>
-                    <flux:sidebar.item icon="document-text" :href="route('expense.index')" :current="request()->routeIs('expense.*')" wire:navigate>
-                        {{ __('Expense Management') }}
-                    </flux:sidebar.item>
+                    <flux:navlist.group
+                        expandable
+                        :expanded="request()->routeIs('expense.*')"
+                        :heading="__('Expense Management')"
+                    >
+                        <flux:sidebar.item :href="route('expense.index')" :current="request()->routeIs('expense.index', 'expense.create', 'expense.show', 'expense.edit')" wire:navigate>
+                            {{ __('Expenses') }}
+                        </flux:sidebar.item>
+                        @can('finance.categories.manage')
+                            <flux:sidebar.item :href="route('expense.categories')" :current="request()->routeIs('expense.categories')" wire:navigate>
+                                {{ __('Categories') }}
+                            </flux:sidebar.item>
+                        @endcan
+                    </flux:navlist.group>
                     <flux:navlist.group
                         expandable
                         :expanded="request()->routeIs('projects.*')"
@@ -48,6 +61,53 @@
                             {{ __('Trainee') }}
                         </flux:sidebar.item>
                     </flux:navlist.group>
+                    <flux:navlist.group
+                        expandable
+                        :expanded="request()->routeIs('admin.page-sections.*', 'admin.team-members.*', 'admin.portfolio.*', 'admin.contact-settings.*')"
+                        :heading="__('Website CMS')"
+                    >
+                        <flux:sidebar.item :href="route('admin.page-sections.index')" :current="request()->routeIs('admin.page-sections.*')" wire:navigate>
+                            {{ __('Page Sections') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item :href="route('admin.team-members.index')" :current="request()->routeIs('admin.team-members.*')" wire:navigate>
+                            {{ __('Team Members') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item :href="route('admin.portfolio.index')" :current="request()->routeIs('admin.portfolio.*')" wire:navigate>
+                            {{ __('Portfolio') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item :href="route('admin.contact-settings.edit')" :current="request()->routeIs('admin.contact-settings.*')" wire:navigate>
+                            {{ __('Contact Settings') }}
+                        </flux:sidebar.item>
+                    </flux:navlist.group>
+                    <flux:navlist.group
+                        expandable
+                        :expanded="request()->routeIs('admin.courses.*', 'admin.course-categories.*')"
+                        :heading="__('Course CMS')"
+                    >
+                        <flux:sidebar.item :href="route('admin.courses.index')" :current="request()->routeIs('admin.courses.*')" wire:navigate>
+                            {{ __('Courses') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item :href="route('admin.course-categories.index')" :current="request()->routeIs('admin.course-categories.*')" wire:navigate>
+                            {{ __('Categories') }}
+                        </flux:sidebar.item>
+                    </flux:navlist.group>
+                    <flux:navlist.group
+                        expandable
+                        :expanded="request()->routeIs('admin.services.*', 'admin.service-categories.*')"
+                        :heading="__('Service CMS')"
+                    >
+                        <flux:sidebar.item :href="route('admin.services.index')" :current="request()->routeIs('admin.services.*')" wire:navigate>
+                            {{ __('Services') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item :href="route('admin.service-categories.index')" :current="request()->routeIs('admin.service-categories.*')" wire:navigate>
+                            {{ __('Categories') }}
+                        </flux:sidebar.item>
+                    </flux:navlist.group>
+                    @can('assets.manage')
+                        <flux:sidebar.item icon="archive-box" :href="route('assets.index')" :current="request()->routeIs('assets.*')" wire:navigate>
+                            {{ __('Asset Management') }}
+                        </flux:sidebar.item>
+                    @endcan
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 

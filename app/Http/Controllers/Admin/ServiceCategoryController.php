@@ -23,7 +23,7 @@ class ServiceCategoryController extends Controller
             $length = $request->input('length');
             $search = $request->input('search.value');
             $orderColumnIndex = $request->input('order.0.column');
-            $orderDirection = $request->input('order.0.dir');
+            $orderDirection = in_array($request->input('order.0.dir'), ['asc', 'desc'], true) ? $request->input('order.0.dir') : 'asc';
 
             $query = ServiceCategory::query();
 
@@ -54,8 +54,7 @@ class ServiceCategoryController extends Controller
                             <i class="fi fi-rr-edit"></i>
                         </a>
                         <form action="' . route('admin.service-categories.destroy', $category->id) . '" method="POST" onsubmit="return confirm(\'Are you sure you want to delete this category?\');" style="display: inline;">
-                            @csrf
-                            @method("DELETE")
+                            ' . csrf_field() . method_field('DELETE') . '
                             <button type="submit" class="btn btn-outline-danger btn-sm">
                                 <i class="fi fi-rr-trash"></i>
                             </button>
@@ -101,37 +100,37 @@ class ServiceCategoryController extends Controller
             ->with('success', 'Service category created successfully.');
     }
 
-    public function edit(ServiceCategory $category)
+    public function edit(ServiceCategory $service_category)
     {
         Gate::authorize('cms.manage');
         return view('pages.admin.services.categories.form', [
-            'category' => $category,
+            'category' => $service_category,
             'mode' => 'edit'
         ]);
     }
 
-    public function update(Request $request, ServiceCategory $category)
+    public function update(Request $request, ServiceCategory $service_category)
     {
         Gate::authorize('cms.manage');
 
         $validated = $request->validate([
             'name' => 'required|string|max:100',
-            'slug' => 'required|string|max:100|unique:service_categories,slug,' . $category->id,
+            'slug' => 'required|string|max:100|unique:service_categories,slug,' . $service_category->id,
             'description' => 'nullable|string',
             'status' => 'required|in:draft,published',
         ]);
 
-        $category->update($validated);
+        $service_category->update($validated);
 
         return redirect()->route('admin.service-categories.index')
             ->with('success', 'Service category updated successfully.');
     }
 
-    public function destroy(ServiceCategory $category)
+    public function destroy(ServiceCategory $service_category)
     {
         Gate::authorize('cms.manage');
 
-        $category->delete();
+        $service_category->delete();
 
         return redirect()->route('admin.service-categories.index')
             ->with('success', 'Service category deleted successfully.');

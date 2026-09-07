@@ -4,10 +4,6 @@
 @section('description', 'HashTag delivers software development, web applications, AI solutions, digital marketing, and IT consulting for clients across 25+ countries.')
 
 @section('content')
-@php
-$sections = \App\Models\PageSection::where('page_slug', 'home')->where('visibility', true)->orderBy('sort_order')->get();
-@endphp
-
 <section class="hero section" id="home">
     <div class="container hero-grid">
         @foreach($sections as $section)
@@ -21,7 +17,7 @@ $sections = \App\Models\PageSection::where('page_slug', 'home')->where('visibili
                     @if($section->button_text && $section->button_link)
                     <a class="btn btn-primary" href="{{ $section->button_link }}">{{ $section->button_text }}</a>
                     @endif
-                    <a class="btn btn-secondary" href="{{ route('work') }}">View Work</a>
+                    <a class="btn btn-secondary" href="{{ route('portfolio') }}">View Portfolio</a>
                 </div>
 
                 <div class="trust-strip" aria-label="Company performance metrics">
@@ -121,13 +117,11 @@ $sections = \App\Models\PageSection::where('page_slug', 'home')->where('visibili
                             <h3>{{ $serviceSection->title }}</h3>
                             <p>{{ $serviceSection->description ?? 'Fast, SEO-friendly websites, portals, and e-commerce experiences that convert visitors into customers.' }}</p>
                             <ul>
-                                @php
-                                $features = explode("\n", $serviceSection->button_text ?? '');
-                                foreach($features as $feature):
-                                    if(trim($feature)):
-                                <li>{{ trim($feature) }}</li>
-                                    @endforeach
-                                @endphp
+                                @foreach(explode("\n", $serviceSection->button_text ?? '') as $feature)
+                                    @if(trim($feature) !== '')
+                                        <li>{{ trim($feature) }}</li>
+                                    @endif
+                                @endforeach
                             </ul>
                         </a>
                     </article>
@@ -152,7 +146,7 @@ $sections = \App\Models\PageSection::where('page_slug', 'home')->where('visibili
             </div>
 
             <div class="courses-grid">
-                @foreach(App\Models\Course::published()->sorted()->get() as $course)
+                @foreach($courses as $course)
                 <article class="course-card reveal">
                     <a href="{{ route('courses.show', $course->slug) }}">
                         @if($course->featured_image)
@@ -220,15 +214,15 @@ $sections = \App\Models\PageSection::where('page_slug', 'home')->where('visibili
 </section>
 
 @foreach($sections as $section)
-    @if($section->section_key == 'work')
-    <section class="section work" id="work">
+    @if(in_array($section->section_key, ['portfolio', 'work'], true))
+    <section class="section portfolio" id="portfolio">
         <div class="container">
             <div class="section-heading split reveal">
                 <div>
-                    <p class="eyebrow">{{ $section->subtitle ?? 'Our recent projects' }}</p>
+                    <p class="eyebrow">{{ $section->subtitle ?? 'Our portfolio' }}</p>
                     <h2>{{ $section->title }}</h2>
                 </div>
-                <p>{{ $section->description ?? 'From ERP systems to international e-commerce builds and training programs, our work blends practical engineering with long-term support.' }}</p>
+                <p>{{ $section->description ?? 'From ERP systems to international e-commerce builds and training programs, our portfolio blends practical engineering with long-term support.' }}</p>
             </div>
 
             <div class="project-grid">
@@ -266,7 +260,7 @@ $sections = \App\Models\PageSection::where('page_slug', 'home')->where('visibili
                         <h3>International e-commerce development for a USA client.</h3>
                         <p>Modern storefront architecture, product management, checkout experience, and performance-ready delivery.</p>
                         <div class="result-row">
-                            <strong>USA</span>
+                            <strong>USA</strong>
                             <span>global client delivery</span>
                         </div>
                     </div>
@@ -335,7 +329,6 @@ $sections = \App\Models\PageSection::where('page_slug', 'home')->where('visibili
     </div>
 </section>
 
-@section('proof')
 <section class="section proof" id="testimonials">
     <div class="container proof-grid">
         <div class="proof-copy reveal">
@@ -363,7 +356,6 @@ $sections = \App\Models\PageSection::where('page_slug', 'home')->where('visibili
         </div>
     </div>
 </section>
-@endsection
 
 @foreach($sections as $section)
     @if($section->section_key == 'contact-cta')
@@ -418,6 +410,8 @@ $sections = \App\Models\PageSection::where('page_slug', 'home')->where('visibili
     </section>
     @endif
 @endforeach
+
+@endsection
 
 @section('scripts')
 <script>

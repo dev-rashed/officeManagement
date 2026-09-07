@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Approval;
+use App\Models\ExpenseCategory;
 use App\Models\ExpenseEntry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -11,7 +12,7 @@ class ExpenseController extends Controller
 {
     public function index()
     {
-        $entries = ExpenseEntry::orderByDesc('date')->paginate(20);
+        $entries = ExpenseEntry::with('category')->orderByDesc('date')->paginate(20);
         $totalEntries = ExpenseEntry::count();
         $pendingEntries = ExpenseEntry::whereIn('status', [
             ExpenseEntry::STATUS_PENDING,
@@ -32,7 +33,9 @@ class ExpenseController extends Controller
     {
         $this->authorizeFinanceEditor();
 
-        return view('pages.finance.expense.create');
+        $categories = ExpenseCategory::selectable()->get();
+
+        return view('pages.finance.expense.create', compact('categories'));
     }
 
     public function store(Request $request)
@@ -41,7 +44,7 @@ class ExpenseController extends Controller
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'expense_category' => ['required', 'string', 'max:255'],
+            'expense_category_id' => ['required', 'integer', 'exists:expense_categories,id'],
             'amount' => ['required', 'numeric', 'min:0'],
             'date' => ['required', 'date'],
             'payment_method' => ['nullable', 'string', 'max:255'],
@@ -65,6 +68,8 @@ class ExpenseController extends Controller
 
     public function show(ExpenseEntry $expense)
     {
+        $expense->load(['category', 'approvals.approver']);
+
         return view('pages.finance.expense.show', compact('expense'));
     }
 
@@ -72,7 +77,11 @@ class ExpenseController extends Controller
     {
         $this->authorizeFinanceEditor();
 
-        return view('pages.finance.expense.edit', compact('expense'));
+        // Keep the entry's own category in the list even if it was since
+        // deactivated, so editing an older expense cannot silently blank it.
+        $categories = ExpenseCategory::selectable($expense->expense_category_id)->get();
+
+        return view('pages.finance.expense.edit', compact('expense', 'categories'));
     }
 
     public function update(Request $request, ExpenseEntry $expense)
@@ -81,7 +90,7 @@ class ExpenseController extends Controller
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'expense_category' => ['required', 'string', 'max:255'],
+            'expense_category_id' => ['required', 'integer', 'exists:expense_categories,id'],
             'amount' => ['required', 'numeric', 'min:0'],
             'date' => ['required', 'date'],
             'payment_method' => ['nullable', 'string', 'max:255'],
@@ -115,7 +124,11 @@ class ExpenseController extends Controller
     {
         $request->validate([
             'action' => ['required', 'string', 'in:approve,reject,send_back'],
-            'comments' => ['nullable', 'string'],
+            // A rejection or a send-back must say why -- the person whose entry
+            // it is has to know what to fix.
+            'comments' => ['required_if:action,reject,send_back', 'nullable', 'string', 'max:2000'],
+        ], [
+            'comments.required_if' => 'Please give a reason when rejecting or sending an entry back.',
         ]);
 
         if (! $expense->canBeApprovedBy($request->user())) {

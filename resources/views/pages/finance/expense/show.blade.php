@@ -17,6 +17,8 @@
             <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">{{ session('success') }}</div>
         @endif
 
+        @include('partials.approval-outcome-banner', ['entry' => $expense])
+
         <div class="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
             <div class="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
                 <h2 class="text-lg font-semibold">{{ __('Expense Information') }}</h2>
@@ -27,7 +29,7 @@
                     </div>
                     <div>
                         <dt class="font-medium">{{ __('Expense Category') }}</dt>
-                        <dd>{{ $expense->expense_category }}</dd>
+                        <dd>{{ $expense->category?->name ?? '—' }}</dd>
                     </div>
                     <div>
                         <dt class="font-medium">{{ __('Amount') }}</dt>
@@ -88,9 +90,14 @@
                     @else
                         <div class="mt-4 space-y-4 text-sm text-slate-700">
                             @foreach($expense->approvals as $approval)
-                                <div class="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-                                    <p class="font-medium">{{ $approval->stageLabel() }} — {{ ucfirst($approval->status) }}</p>
-                                    <p class="mt-1">{{ $approval->comments ?? __('No comments') }}</p>
+                                <div @class([
+                                    'rounded-2xl border p-4',
+                                    'border-neutral-200 bg-neutral-50' => $approval->status === 'approved',
+                                    'border-rose-200 bg-rose-50' => $approval->status === 'rejected',
+                                    'border-amber-200 bg-amber-50' => $approval->status === 'sent_back',
+                                ])>
+                                    <p class="font-medium">{{ $approval->stageLabel() }} — {{ ucfirst(str_replace('_', ' ', $approval->status)) }}</p>
+                                    <p class="mt-1 whitespace-pre-line">{{ $approval->comments ?: __('No comments') }}</p>
                                     <p class="mt-2 text-xs text-slate-500">{{ $approval->approver?->name ?? __('System') }} · {{ $approval->approved_at?->format('Y-m-d H:i') ?? __('Not recorded') }}</p>
                                 </div>
                             @endforeach
@@ -101,20 +108,34 @@
                 @if($expense->canBeApprovedBy(auth()->user()))
                     <div class="rounded-xl border border-amber-200 bg-amber-50 p-6 shadow-sm">
                         <h2 class="text-lg font-semibold">{{ __('Take Action') }}</h2>
-                        <form method="POST" action="{{ route('expense.approve', $expense) }}" class="space-y-4 mt-4">
+                        <form method="POST" action="{{ route('expense.approve', $expense) }}" class="space-y-4 mt-4" data-approval-form>
                             @csrf
                             <label class="block text-sm font-medium text-slate-700">{{ __('Action') }}</label>
-                            <select name="action" class="mt-2 w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm" required>
-                                <option value="approve">{{ __('Approve') }}</option>
-                                <option value="reject">{{ __('Reject') }}</option>
-                                <option value="send_back">{{ __('Send Back for Correction') }}</option>
+                            <select name="action" data-approval-action class="mt-2 w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm" required>
+                                <option value="approve" @selected(old('action') === 'approve')>{{ __('Approve') }}</option>
+                                <option value="reject" @selected(old('action') === 'reject')>{{ __('Reject') }}</option>
+                                <option value="send_back" @selected(old('action') === 'send_back')>{{ __('Send Back for Correction') }}</option>
                             </select>
 
-                            <label class="block text-sm font-medium text-slate-700">{{ __('Comments / Remarks') }}</label>
-                            <textarea name="comments" rows="4" class="mt-2 w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm"></textarea>
+                            <label class="block text-sm font-medium text-slate-700">
+                                <span data-approval-label>{{ __('Comments / Remarks') }}</span>
+                                <span data-approval-required class="hidden text-rose-600">*</span>
+                            </label>
+                            <textarea
+                                name="comments"
+                                rows="4"
+                                data-approval-comments
+                                placeholder="{{ __('Optional for an approval. Required when rejecting or sending back.') }}"
+                                class="mt-2 w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm @error('comments') border-rose-500 @enderror"
+                            >{{ old('comments') }}</textarea>
+                            @error('comments')
+                                <p class="mt-1 text-sm text-rose-600">{{ $message }}</p>
+                            @enderror
 
                             <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-amber-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-amber-700">{{ __('Submit Decision') }}</button>
                         </form>
+
+                        @include('partials.approval-reason-script')
                     </div>
                 @endif
             </div>

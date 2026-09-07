@@ -2,10 +2,12 @@
 
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\Finance\ExpenseCategoryController;
 use App\Http\Controllers\Finance\IncomeCategoryController;
 use App\Http\Controllers\IncomeController;
 use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\Projects\FieldDefinitionController;
 use App\Http\Controllers\TraineeController;
 use Illuminate\Support\Facades\Route;
 
@@ -37,10 +39,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('income/{income}', [IncomeController::class, 'destroy'])->name('income.destroy');
     Route::post('income/{income}/approve', [IncomeController::class, 'approve'])->name('income.approve');
 
-    // Expense entries
+    // Expense entries (static segments must come before the {expense} wildcard)
     Route::get('expense', [ExpenseController::class, 'index'])->name('expense.index');
     Route::get('expense/create', [ExpenseController::class, 'create'])->name('expense.create');
     Route::post('expense', [ExpenseController::class, 'store'])->name('expense.store');
+
+    // Expense categories (before expense/{expense} wildcard)
+    Route::get('expense/categories', [ExpenseCategoryController::class, 'index'])->name('expense.categories');
+    Route::get('expense/categories/data', [ExpenseCategoryController::class, 'data'])->name('expense.categories.data');
+    Route::get('expense/categories/{category}', [ExpenseCategoryController::class, 'show'])->name('expense.categories.show');
+    Route::post('expense/categories', [ExpenseCategoryController::class, 'store'])->name('expense.categories.store');
+    Route::put('expense/categories/{category}', [ExpenseCategoryController::class, 'update'])->name('expense.categories.update');
+    Route::delete('expense/categories/{category}', [ExpenseCategoryController::class, 'destroy'])->name('expense.categories.destroy');
+
     Route::get('expense/{expense}', [ExpenseController::class, 'show'])->name('expense.show');
     Route::get('expense/{expense}/edit', [ExpenseController::class, 'edit'])->name('expense.edit');
     Route::put('expense/{expense}', [ExpenseController::class, 'update'])->name('expense.update');
@@ -61,42 +72,58 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('projects/categories/{category}', [ProjectCategoryController::class, 'destroy'])->name('projects.categories.destroy');
 
     Route::get('projects/trainees', [TraineeController::class, 'index'])->name('projects.trainees.index');
+    // Returns the custom fields for a project, so the registration modal can
+    // rebuild itself when the project is changed.
+    Route::get('projects/trainees/fields', [TraineeController::class, 'fields'])->name('projects.trainees.fields');
     Route::get('projects/trainees/data', [TraineeController::class, 'data'])->name('projects.trainees.data');
     Route::post('projects/trainees', [TraineeController::class, 'store'])->name('projects.trainees.store');
     Route::post('projects/trainees/{trainee}', [TraineeController::class, 'update'])->name('projects.trainees.update');
     Route::delete('projects/trainees/{trainee}', [TraineeController::class, 'destroy'])->name('projects.trainees.destroy');
+
+    // Registration form builder — the custom fields a project asks for.
+    // {project} is constrained to digits so it cannot swallow the static
+    // projects/categories and projects/trainees paths above.
+    Route::prefix('projects/{project}')->whereNumber('project')->name('projects.fields.')->group(function () {
+        Route::get('fields', [FieldDefinitionController::class, 'index'])->name('index');
+        Route::post('fields', [FieldDefinitionController::class, 'store'])->name('store');
+        Route::post('fields/reorder', [FieldDefinitionController::class, 'reorder'])->name('reorder');
+        Route::put('fields/{field}', [FieldDefinitionController::class, 'update'])->name('update');
+        Route::delete('fields/{field}', [FieldDefinitionController::class, 'destroy'])->name('destroy');
+    });
 });
 
 require __DIR__.'/settings.php';
 
 // CMS Routes
-Route::middleware(['auth', 'verified'])->prefix('admin/cms')->group(function () {
-    Route::resource('page-sections', \App\Http\Controllers\Admin\PageSectionController::class);
+Route::middleware(['auth', 'verified'])->prefix('admin/cms')->name('admin.')->group(function () {
     Route::get('page-sections/data', [\App\Http\Controllers\Admin\PageSectionController::class, 'data'])->name('page-sections.data');
-    Route::resource('team-members', \App\Http\Controllers\Admin\TeamMemberController::class);
+    Route::resource('page-sections', \App\Http\Controllers\Admin\PageSectionController::class)->except(['show']);
     Route::get('team-members/data', [\App\Http\Controllers\Admin\TeamMemberController::class, 'data'])->name('team-members.data');
-    Route::resource('portfolio', \App\Http\Controllers\Admin\PortfolioItemController::class);
+    Route::resource('team-members', \App\Http\Controllers\Admin\TeamMemberController::class)->except(['show']);
     Route::get('portfolio/data', [\App\Http\Controllers\Admin\PortfolioItemController::class, 'data'])->name('portfolio.data');
+    Route::resource('portfolio', \App\Http\Controllers\Admin\PortfolioItemController::class)->except(['show']);
     Route::get('contact-settings', [\App\Http\Controllers\Admin\ContactSettingController::class, 'edit'])->name('contact-settings.edit');
     Route::put('contact-settings', [\App\Http\Controllers\Admin\ContactSettingController::class, 'update'])->name('contact-settings.update');
 });
 
 // Asset Management Routes
-Route::middleware(['auth', 'verified'])->resource('assets', \App\Http\Controllers\AssetController::class);
-Route::get('assets/data', [\App\Http\Controllers\AssetController::class, 'data'])->name('assets.data');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('assets/data', [\App\Http\Controllers\AssetController::class, 'data'])->name('assets.data');
+    Route::resource('assets', \App\Http\Controllers\AssetController::class);
+});
 
 // Course Management Routes
-Route::middleware(['auth', 'verified'])->prefix('admin')->group(function () {
-    Route::resource('courses', \App\Http\Controllers\Admin\CourseController::class);
-    Route::get('courses/data', [\App\Http\Controllers\Admin\CourseController::class, 'data'])->name('admin.courses.data');
-    Route::resource('course-categories', \App\Http\Controllers\Admin\CourseCategoryController::class);
-    Route::get('course-categories/data', [\App\Http\Controllers\Admin\CourseCategoryController::class, 'data'])->name('admin.course-categories.data');
+Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('courses/data', [\App\Http\Controllers\Admin\CourseController::class, 'data'])->name('courses.data');
+    Route::resource('courses', \App\Http\Controllers\Admin\CourseController::class)->except(['show']);
+    Route::get('course-categories/data', [\App\Http\Controllers\Admin\CourseCategoryController::class, 'data'])->name('course-categories.data');
+    Route::resource('course-categories', \App\Http\Controllers\Admin\CourseCategoryController::class)->except(['show']);
 });
 
 // Service Management Routes
-Route::middleware(['auth', 'verified'])->prefix('admin')->group(function () {
-    Route::resource('services', \App\Http\Controllers\Admin\ServiceController::class);
-    Route::get('services/data', [\App\Http\Controllers\Admin\ServiceController::class, 'data'])->name('admin.services.data');
-    Route::resource('service-categories', \App\Http\Controllers\Admin\ServiceCategoryController::class);
-    Route::get('service-categories/data', [\App\Http\Controllers\Admin\ServiceCategoryController::class, 'data'])->name('admin.service-categories.data');
+Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('services/data', [\App\Http\Controllers\Admin\ServiceController::class, 'data'])->name('services.data');
+    Route::resource('services', \App\Http\Controllers\Admin\ServiceController::class)->except(['show']);
+    Route::get('service-categories/data', [\App\Http\Controllers\Admin\ServiceCategoryController::class, 'data'])->name('service-categories.data');
+    Route::resource('service-categories', \App\Http\Controllers\Admin\ServiceCategoryController::class)->except(['show']);
 });

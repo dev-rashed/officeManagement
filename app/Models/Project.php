@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'project_category_id',
@@ -52,6 +53,17 @@ class Project extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function trainees(): HasMany
+    {
+        return $this->hasMany(Trainee::class);
+    }
+
+    /** The extra registration fields this project asks for. */
+    public function fieldDefinitions(): HasMany
+    {
+        return $this->hasMany(FieldDefinition::class);
     }
 
     public function statusLabel(): string

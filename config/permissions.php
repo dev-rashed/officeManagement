@@ -9,6 +9,7 @@ return [
         User::ROLE_ADMIN => [
             'finance.view',
             'finance.manage',
+            'finance.categories.manage',
             'approvals.manage',
             'users.manage',
             'settings.manage',
@@ -19,6 +20,7 @@ return [
         User::ROLE_ACCOUNTANT => [
             'finance.view',
             'finance.manage',
+            'finance.categories.manage',
             'approvals.manage',
             'cms.manage',
             'assets.manage',

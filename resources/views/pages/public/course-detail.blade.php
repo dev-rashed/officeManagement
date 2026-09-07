@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', '{{ $course->title }} | Courses | HashTag')
+@section('title', $course->title . ' | Courses | HashTag')
 
 @section('content')
 <section class="section" style="min-height: 500px;">
@@ -12,7 +12,7 @@
         @endif
 
         <div style="max-width: 800px;">
-            <p class="eyebrow">{{ $course->category ?? 'Course' }}</p>
+            <p class="eyebrow">{{ $course->category?->name ?? 'Course' }}</p>
             <h1>{{ $course->title }}</h1>
             <p style="font-size: 1.1rem; margin: 1.5rem 0;">{{ $course->short_description }}</p>
 

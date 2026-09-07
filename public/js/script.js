@@ -28,6 +28,10 @@ function toggleNavigation() {
 }
 
 function updateActiveLink() {
+    if (!hashNavLinks.length) {
+        return;
+    }
+
     let current = "";
 
     sections.forEach((section) => {

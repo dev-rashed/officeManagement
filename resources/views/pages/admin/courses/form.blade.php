@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', '{{ $course ? "Edit" : "Add New" }} Course')
+@section('title', ($course ? 'Edit' : 'Add New').' Course')
 
 @section('content')
 <div class="max-w-5xl mx-auto p-4">
-    <div class="bg-white rounded-lg shadow">
+    <div class="admin-form-card">
         <div class="px-6 py-4 border-b">
             <h2 class="text-xl font-semibold">
                 {{ $course ? "Edit" : "Add New" }} Course
@@ -83,7 +83,7 @@
                         @endforeach
                     </select>
                     @error('category_id')
-                        <p class="mt-1 text-sm text-red-600>{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -103,7 +103,7 @@
                         <option value="hybrid" {{ old('class_type', $course?->class_type ?? 'offline') === 'hybrid' ? 'selected' : '' }}>Hybrid</option>
                     </select>
                     @error('class_type')
-                        <p class="mt-1 text-sm text-red-600>{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -111,7 +111,7 @@
                     <label for="location" class="block text-sm font-medium text-gray-700 mb-1">Location</label>
                     <input type="text" id="location" name="location" value="{{ old('location', $course?->location ?? '') }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     @error('location')
-                        <p class="mt-1 text-sm text-red-600>{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -119,7 +119,7 @@
                     <label for="schedule_batch" class="block text-sm font-medium text-gray-700 mb-1">Schedule/Batch Time</label>
                     <input type="text" id="schedule_batch" name="schedule_batch" value="{{ old('schedule_batch', $course?->schedule_batch ?? '') }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     @error('schedule_batch')
-                        <p class="mt-1 text-sm text-red-600>{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -127,7 +127,7 @@
                     <label for="fee" class="block text-sm font-medium text-gray-700 mb-1">Fee/Price</label>
                     <input type="text" id="fee" name="fee" value="{{ old('fee', $course?->fee ?? '') }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     @error('fee')
-                        <p class="mt-1 text-sm text-red-600>{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -135,7 +135,7 @@
                     <label for="instructor_name" class="block text-sm font-medium text-gray-700 mb-1">Instructor Name</label>
                     <input type="text" id="instructor_name" name="instructor_name" value="{{ old('instructor_name', $course?->instructor_name ?? '') }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     @error('instructor_name')
-                        <p class="mt-1 text-sm text-red-600>{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -151,7 +151,7 @@
                     <label for="sort_order" class="block text-sm font-medium text-gray-700 mb-1">Sort Order</label>
                     <input type="number" id="sort_order" name="sort_order" value="{{ old('sort_order', $course?->sort_order ?? 0) }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" min="0">
                     @error('sort_order')
-                        <p class="mt-1 text-sm text-red-600>{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -168,14 +168,14 @@
                         </div>
                     </div>
                     @error('status')
-                        <p class="mt-1 text-sm text-red-600>{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
             </div>
 
             <div class="px-6 py-4 border-t">
-                <div class="flex justify-end space-x-3">
+                <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
                     <a href="{{ route('admin.courses.index') }}" class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 text-sm font-medium">
                         Cancel
                     </a>

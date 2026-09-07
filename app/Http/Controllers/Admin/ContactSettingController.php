@@ -37,7 +37,7 @@ class ContactSettingController extends Controller
         $settings = ContactSetting::instance();
         $settings->update($validated);
 
-        return redirect()->route('contact-settings.edit')
+        return redirect()->route('admin.contact-settings.edit')
             ->with('success', 'Contact settings updated successfully.');
     }
 }

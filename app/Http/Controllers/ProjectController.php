@@ -53,6 +53,7 @@ class ProjectController extends Controller
             };
 
             $actions = '<div class="project-actions">';
+            $actions .= '<a href="'.route('projects.fields.index', $project).'" class="project-action-btn is-neutral" title="Registration fields for this project">Form</a>';
             $actions .= '<button type="button" class="project-action-btn is-primary project-edit-btn"'
                 .' data-project-id="'.$project->id.'"'
                 .' data-title="'.e($project->title).'"'

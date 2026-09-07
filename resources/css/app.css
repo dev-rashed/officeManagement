@@ -132,4 +132,603 @@ select:focus[data-flux-control] {
     .dark .status-switch__input:checked + .status-switch__track {
         background: #059669;
     }
+
+    .admin-table-shell {
+        @apply overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900;
+        max-width: 100%;
+    }
+
+    .admin-data-table {
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+        color: #0f172a;
+        min-width: 54rem;
+        text-align: left;
+        width: 100% !important;
+    }
+
+    #assetsTable {
+        min-width: 96rem;
+    }
+
+    .admin-table-shell .dataTables_wrapper {
+        color: #475569;
+    }
+
+    .admin-table-shell .dataTables_length,
+    .admin-table-shell .dataTables_filter {
+        padding: 0.8rem 0.95rem 0;
+    }
+
+    .admin-table-shell .dataTables_info,
+    .admin-table-shell .dataTables_paginate {
+        padding: 0.8rem 0.95rem 0.95rem;
+    }
+
+    .admin-table-shell .dataTables_length label,
+    .admin-table-shell .dataTables_filter label,
+    .admin-table-shell .dataTables_info {
+        align-items: center;
+        color: #64748b;
+        display: inline-flex;
+        font-size: 0.68rem;
+        font-weight: 500;
+        gap: 0.35rem;
+    }
+
+    .admin-table-shell .dataTables_length select,
+    .admin-table-shell .dataTables_filter input {
+        background: #fff;
+        border: 1px solid #dbe4f0;
+        border-radius: 9999px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        color: #0f172a;
+        font-size: 0.7rem;
+        min-height: 1.95rem;
+        outline: none;
+        padding: 0.3rem 0.75rem;
+    }
+
+    .admin-table-shell .dataTables_filter {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .admin-table-shell .dataTables_filter input {
+        margin-left: 0.4rem;
+        width: 12rem;
+    }
+
+    .admin-data-table thead th {
+        background: #fbfdff;
+        border-bottom: 1px solid #e8eef6;
+        color: #8ba0c0;
+        font-size: 0.64rem;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        padding: 0.68rem 0.9rem;
+        text-transform: uppercase;
+    }
+
+    .admin-data-table tbody td {
+        background: #fff;
+        border-bottom: 1px solid #edf2f7;
+        font-size: 0.76rem;
+        padding: 0.78rem 0.9rem;
+        vertical-align: middle;
+    }
+
+    .admin-data-table tbody tr:hover td {
+        background: #f8fbff;
+    }
+
+    .admin-table-shell .dataTables_paginate .paginate_button {
+        background: #fff !important;
+        border: 1px solid #dbe4f0 !important;
+        border-radius: 9999px;
+        color: #475569 !important;
+        font-size: 0.68rem !important;
+        margin-left: 0.25rem;
+        min-width: 1.85rem;
+        padding: 0.24rem 0.56rem !important;
+    }
+
+    .admin-table-shell .dataTables_paginate .paginate_button:hover {
+        background: #eff6ff !important;
+        border-color: #bfdbfe !important;
+        color: #1d4ed8 !important;
+    }
+
+    .admin-table-shell .dataTables_paginate .paginate_button.current {
+        background: #0f172a !important;
+        border-color: #0f172a !important;
+        color: #fff !important;
+    }
+
+    .admin-table-shell .dataTables_processing {
+        background: #fff;
+        border: 1px solid #dbe4f0;
+        border-radius: 9999px;
+        box-shadow: 0 12px 30px rgba(148, 163, 184, 0.18);
+        color: #0f172a;
+        font-size: 0.68rem;
+        padding: 0.5rem 1rem;
+    }
+
+    .dark .admin-data-table,
+    .dark .admin-data-table tbody td {
+        color: #fafafa;
+    }
+
+    .dark .admin-data-table thead th {
+        background: #111827;
+        border-bottom-color: #27272a;
+        color: #94a3b8;
+    }
+
+    .dark .admin-data-table tbody td,
+    .dark .admin-table-shell .dataTables_length select,
+    .dark .admin-table-shell .dataTables_filter input,
+    .dark .admin-table-shell .dataTables_paginate .paginate_button,
+    .dark .admin-table-shell .dataTables_processing {
+        background: #09090b !important;
+        border-color: #27272a !important;
+        color: #f4f4f5 !important;
+    }
+
+    .dark .admin-data-table tbody tr:hover td {
+        background: #111827 !important;
+    }
+
+    .dark .admin-table-shell .dataTables_length label,
+    .dark .admin-table-shell .dataTables_filter label,
+    .dark .admin-table-shell .dataTables_info {
+        color: #94a3b8;
+    }
+
+    .badge {
+        align-items: center;
+        border: 1px solid transparent;
+        border-radius: 9999px;
+        display: inline-flex;
+        font-size: 0.64rem;
+        font-weight: 600;
+        line-height: 1;
+        padding: 0.25rem 0.48rem;
+    }
+
+    .bg-success {
+        background: #ecfdf3;
+        border-color: #a7f3d0;
+        color: #047857;
+    }
+
+    .bg-secondary {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #475569;
+    }
+
+    .bg-warning {
+        background: #fffbeb;
+        border-color: #fde68a;
+        color: #b45309;
+    }
+
+    .bg-danger {
+        background: #fef2f2;
+        border-color: #fecaca;
+        color: #b91c1c;
+    }
+
+    .bg-dark {
+        background: #0f172a;
+        border-color: #0f172a;
+        color: #ffffff;
+    }
+
+    .btn-group {
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: 0.32rem;
+        justify-content: flex-end;
+        min-width: max-content;
+    }
+
+    .btn {
+        align-items: center;
+        border-radius: 8px;
+        display: inline-flex;
+        font-size: 0.67rem;
+        font-weight: 600;
+        justify-content: center;
+        min-height: 1.85rem;
+        padding: 0.34rem 0.62rem;
+        transition: filter 0.2s ease;
+    }
+
+    .btn:hover {
+        filter: brightness(0.98);
+    }
+
+    .btn-outline-primary {
+        background: #fff;
+        border: 1px solid #dbe4f0;
+        color: #334155;
+    }
+
+    .btn-outline-danger {
+        background: #ef4444;
+        border: 1px solid #ef4444;
+        color: #fff;
+    }
+
+    .dark .bg-secondary {
+        background: #18181b;
+        border-color: #3f3f46;
+        color: #d4d4d8;
+    }
+
+    .dark .btn-outline-primary {
+        background: #09090b;
+        border-color: #27272a;
+        color: #f4f4f5;
+    }
+
+    .admin-form-card,
+    .admin-detail-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        overflow: hidden;
+    }
+
+    .admin-form-card > .px-6,
+    .admin-form-card > form {
+        max-width: 100%;
+    }
+
+    .admin-form-card input:not([type='checkbox']):not([type='radio']),
+    .admin-form-card select,
+    .admin-form-card textarea {
+        min-height: 2.65rem;
+    }
+
+    .admin-form-card input,
+    .admin-form-card select,
+    .admin-form-card textarea {
+        max-width: 100%;
+    }
+
+    .admin-form-card .border-t .flex a,
+    .admin-form-card .border-t .flex button {
+        min-height: 2.5rem;
+        text-align: center;
+    }
+
+    .admin-form {
+        padding: clamp(1rem, 2.5vw, 1.5rem);
+    }
+
+    .admin-form-grid,
+    .admin-detail-grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-field {
+        display: grid;
+        gap: 0.4rem;
+        min-width: 0;
+    }
+
+    .admin-field label {
+        color: #334155;
+        font-size: 0.78rem;
+        font-weight: 650;
+    }
+
+    .admin-field input,
+    .admin-field select,
+    .admin-field textarea {
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        color: #0f172a;
+        font-size: 0.9rem;
+        min-height: 2.75rem;
+        outline: none;
+        padding: 0.62rem 0.75rem;
+        width: 100%;
+    }
+
+    .admin-field textarea {
+        min-height: 7rem;
+        resize: vertical;
+    }
+
+    .admin-field input[type='file'] {
+        cursor: pointer;
+        padding: 0.52rem;
+    }
+
+    .admin-field input:focus,
+    .admin-field select:focus,
+    .admin-field textarea:focus {
+        border-color: #0284c7;
+        box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.16);
+    }
+
+    .admin-help,
+    .admin-empty {
+        color: #64748b;
+        font-size: 0.76rem;
+    }
+
+    .admin-help-link {
+        color: #0369a1;
+        font-size: 0.78rem;
+        font-weight: 650;
+        width: fit-content;
+    }
+
+    .admin-help-link:hover {
+        text-decoration: underline;
+    }
+
+    .admin-error {
+        color: #dc2626;
+        font-size: 0.78rem;
+    }
+
+    .admin-form-actions {
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+        justify-content: flex-end;
+        margin: 1.5rem -1.5rem -1.5rem;
+        padding: 1rem 1.5rem;
+    }
+
+    .admin-btn {
+        align-items: center;
+        border-radius: 8px;
+        display: inline-flex;
+        font-size: 0.82rem;
+        font-weight: 700;
+        justify-content: center;
+        min-height: 2.5rem;
+        padding: 0.55rem 0.9rem;
+        text-align: center;
+        transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+
+    .admin-btn-primary {
+        background: #0284c7;
+        color: #ffffff;
+    }
+
+    .admin-btn-primary:hover {
+        background: #0369a1;
+    }
+
+    .admin-btn-secondary {
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        color: #334155;
+    }
+
+    .admin-btn-secondary:hover {
+        background: #f1f5f9;
+        border-color: #94a3b8;
+    }
+
+    .admin-btn-danger {
+        background: #dc2626;
+        color: #ffffff;
+    }
+
+    .admin-btn-danger:hover {
+        background: #b91c1c;
+    }
+
+    .admin-detail-card {
+        padding: clamp(1rem, 2.5vw, 1.5rem);
+    }
+
+    .admin-detail-grid section {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 1rem;
+        min-width: 0;
+    }
+
+    .admin-detail-grid h2 {
+        color: #0f172a;
+        font-size: 0.8rem;
+        font-weight: 750;
+        margin-bottom: 0.85rem;
+        text-transform: uppercase;
+    }
+
+    .admin-detail-grid dl {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    .admin-detail-grid dl > div {
+        display: grid;
+        gap: 0.2rem;
+    }
+
+    .admin-detail-grid dt {
+        color: #64748b;
+        font-size: 0.72rem;
+        font-weight: 650;
+    }
+
+    .admin-detail-grid dd {
+        color: #0f172a;
+        font-size: 0.88rem;
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .admin-attachment {
+        display: grid;
+        gap: 0.85rem;
+    }
+
+    .admin-attachment img {
+        border-radius: 8px;
+        max-height: 18rem;
+        object-fit: contain;
+        width: 100%;
+    }
+
+    .admin-attachment div {
+        background: #f8fafc;
+        border: 1px dashed #cbd5e1;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+
+    .admin-attachment p {
+        color: #0f172a;
+        font-size: 0.9rem;
+        font-weight: 700;
+        overflow-wrap: anywhere;
+    }
+
+    .admin-attachment span {
+        color: #64748b;
+        font-size: 0.76rem;
+    }
+
+    .admin-note {
+        background: #f8fafc;
+        border-radius: 8px;
+        color: #334155;
+        padding: 1rem;
+        white-space: pre-wrap;
+    }
+
+    .dark .admin-form-card,
+    .dark .admin-detail-card {
+        background: #18181b;
+        border-color: #27272a;
+    }
+
+    .dark .admin-field label,
+    .dark .admin-detail-grid h2,
+    .dark .admin-detail-grid dd,
+    .dark .admin-attachment p {
+        color: #f4f4f5;
+    }
+
+    .dark .admin-field input,
+    .dark .admin-field select,
+    .dark .admin-field textarea {
+        background: #09090b;
+        border-color: #3f3f46;
+        color: #f4f4f5;
+    }
+
+    .dark .admin-form-actions,
+    .dark .admin-detail-grid section,
+    .dark .admin-attachment div {
+        border-color: #27272a;
+    }
+
+    .dark .admin-help,
+    .dark .admin-empty,
+    .dark .admin-detail-grid dt,
+    .dark .admin-attachment span {
+        color: #a1a1aa;
+    }
+
+    .dark .admin-btn-secondary,
+    .dark .admin-attachment div,
+    .dark .admin-note {
+        background: #09090b;
+        border-color: #3f3f46;
+        color: #f4f4f5;
+    }
+
+    @media (max-width: 768px) {
+        .admin-table-shell {
+            border-radius: 8px;
+        }
+
+        .admin-table-shell .dataTables_length,
+        .admin-table-shell .dataTables_filter,
+        .admin-table-shell .dataTables_info,
+        .admin-table-shell .dataTables_paginate {
+            display: block;
+            padding-inline: 0.75rem;
+            text-align: left;
+            width: 100%;
+        }
+
+        .admin-table-shell .dataTables_length label,
+        .admin-table-shell .dataTables_filter label {
+            align-items: stretch;
+            display: grid;
+            gap: 0.4rem;
+            width: 100%;
+        }
+
+        .admin-table-shell .dataTables_filter {
+            justify-content: stretch;
+        }
+
+        .admin-table-shell .dataTables_filter input {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        .admin-table-shell .dataTables_paginate {
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .admin-form-grid,
+        .admin-detail-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-form {
+            padding: 1rem;
+        }
+
+        .admin-form-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+            margin: 1.25rem -1rem -1rem;
+            padding: 1rem;
+        }
+
+        .admin-form-card .px-6 {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        .admin-form-card .border-t .flex a,
+        .admin-form-card .border-t .flex button {
+            width: 100%;
+        }
+
+        .admin-btn,
+        .admin-form-actions .admin-btn,
+        .admin-form-actions button {
+            width: 100%;
+        }
+
+        .btn-group {
+            justify-content: flex-start;
+        }
+    }
 }

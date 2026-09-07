@@ -3,17 +3,12 @@
 @section('title', 'Courses Management')
 
 @section('content')
-<x-flux::page-header title="Courses">
-    <x-flux::toolbar>
-        <x-flux::button href="{{ route('admin.courses.create') }}" variant="primary">
-            Add New Course
-        </x-flux::button>
-    </x-flux::toolbar>
-</x-flux::page-header>
+<div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h1 class="text-lg font-semibold tracking-tight text-zinc-900 dark:text-white">Courses</h1></div><a href="{{ route('admin.courses.create') }}" class="inline-flex items-center justify-center rounded-xl bg-sky-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-sky-700">Add New Course</a></div>
 
 <div class="space-y-4">
-    <div class="p-4 bg-white rounded-lg shadow">
-        <table class="w-full" id="coursesTable">
+    <div class="admin-table-shell">
+        <div class="overflow-x-auto">
+        <table class="admin-data-table" id="coursesTable">
             <thead>
                 <tr class="border-b">
                     <th class="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
@@ -30,6 +25,7 @@
                 <!-- Data will be loaded via AJAX -->
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 @endsection
@@ -58,3 +54,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
+

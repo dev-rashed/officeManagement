@@ -32,7 +32,15 @@
 
                 <label class="block">
                     <span class="text-sm font-medium text-slate-700">{{ __('Expense Category') }}</span>
-                    <input type="text" name="expense_category" value="{{ old('expense_category', $expense->expense_category) }}" class="mt-2 w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm" required>
+                    <select name="expense_category_id" class="mt-2 w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm" required>
+                        <option value="">{{ __('Select a category') }}</option>
+                        @foreach ($categories as $category)
+                            <option value="{{ $category->id }}" @selected(old('expense_category_id', $expense->expense_category_id) == $category->id)>{{ $category->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('expense_category_id')
+                        <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span>
+                    @enderror
                 </label>
 
                 <label class="block">

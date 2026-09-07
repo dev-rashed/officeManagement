@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', '{{ $section ? "Edit" : "Add New" }} Page Section')
+@section('title', ($section ? 'Edit' : 'Add New').' Page Section')
 
 @section('content')
 <div class="max-w-4xl mx-auto p-4">
-    <div class="bg-white rounded-lg shadow">
+    <div class="admin-form-card">
         <div class="px-6 py-4 border-b">
             <h2 class="text-xl font-semibold">
                 {{ $section ? "Edit" : "Add New" }} Page Section
@@ -32,7 +32,8 @@
                         <option value="vision" {{ old('page_slug', $section?->page_slug ?? '') === 'vision' ? 'selected' : '' }}>Vision</option>
                         <option value="team" {{ old('page_slug', $section?->page_slug ?? '') === 'team' ? 'selected' : '' }}>Team</option>
                         <option value="contact" {{ old('page_slug', $section?->page_slug ?? '') === 'contact' ? 'selected' : '' }}>Contact</option>
-                        <option value="work" {{ old('page_slug', $section?->page_slug ?? '') === 'work' ? 'selected' : '' }}>Work</option>
+                        <option value="portfolio" {{ old('page_slug', $section?->page_slug ?? '') === 'portfolio' ? 'selected' : '' }}>Portfolio</option>
+                        <option value="work" {{ old('page_slug', $section?->page_slug ?? '') === 'work' ? 'selected' : '' }}>Work (Legacy)</option>
                     </select>
                     @error('page_slug')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -110,6 +111,7 @@
                 <div>
                     <label for="visibility" class="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
                     <div class="flex items-center">
+                        <input type="hidden" name="visibility" value="0">
                         <input type="checkbox" id="visibility" name="visibility" value="1" {{ old('visibility', $section?->visibility ?? 0) ? 'checked' : '' }} class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
                         <span class="ml-2 text-sm font-medium text-gray-700">Visible on page</span>
                     </div>
@@ -129,7 +131,7 @@
             </div>
 
             <div class="px-6 py-4 border-t">
-                <div class="flex justify-end space-x-3">
+                <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
                     <a href="{{ route('admin.page-sections.index') }}" class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 text-sm font-medium">
                         Cancel
                     </a>

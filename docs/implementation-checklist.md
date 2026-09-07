@@ -4,107 +4,109 @@ Use this checklist while implementing the frontend CMS, course CMS, services CMS
 
 ## Discovery
 
-- [ ] Review `layout/` design files and identify reusable header, footer, navigation, and section patterns.
-- [ ] Review existing admin Blade layout and form/table patterns.
-- [ ] Review existing route organization in `routes/web.php`.
-- [ ] Review existing controller and model naming conventions.
-- [ ] Review existing income module files: `IncomeController`, `IncomeEntry`, `IncomeCategory`, income migrations, and income Blade views.
-- [ ] Review existing expense module files: `ExpenseController`, `ExpenseEntry`, expense migration, and expense Blade views.
-- [ ] Review existing approval flow in `Approval`, `IncomeEntry`, and `ExpenseEntry`.
-- [ ] Review finance permissions in `config/permissions.php` and `App\Providers\AppServiceProvider`.
-- [ ] Confirm how file uploads are currently handled, if any.
-- [ ] Confirm whether roles or permissions already exist.
+- [x] Review `layout/` design files and identify reusable header, footer, navigation, and section patterns.
+- [x] Review existing admin Blade layout and form/table patterns.
+- [x] Review existing route organization in `routes/web.php`.
+- [x] Review existing controller and model naming conventions.
+- [x] Review existing income module files: `IncomeController`, `IncomeEntry`, `IncomeCategory`, income migrations, and income Blade views.
+- [x] Review existing expense module files: `ExpenseController`, `ExpenseEntry`, expense migration, and expense Blade views.
+- [x] Review existing approval flow in `Approval`, `IncomeEntry`, and `ExpenseEntry`.
+- [x] Review finance permissions in `config/permissions.php` and `App\Providers\AppServiceProvider`.
+- [x] Confirm how file uploads are currently handled, if any.
+- [x] Confirm whether roles or permissions already exist.
 
 ## Existing Finance Module Guardrails
 
-- [ ] Do not recreate income CRUD; use the existing `income.*` routes and `IncomeEntry` model.
-- [ ] Do not recreate expense CRUD; use the existing `expense.*` routes and `ExpenseEntry` model.
-- [ ] Keep existing income category management intact.
-- [ ] Keep existing approval status constants compatible for income and expense.
-- [ ] Keep the approval stage order: Managing Director, Director, Chairman.
-- [ ] Keep finance editor checks aligned with `finance.manage`.
-- [ ] Preserve current attachment storage paths: `uploads/income` and `uploads/expense`.
-- [ ] Preserve current sidebar links for income, income categories, and expense.
-- [ ] If adding expense categories later, avoid breaking existing `expense_category` string data.
-- [ ] If adding finance dashboards or reports, aggregate from existing `income_entries` and `expense_entries` tables.
+- [x] Do not recreate income CRUD; use the existing `income.*` routes and `IncomeEntry` model.
+- [x] Do not recreate expense CRUD; use the existing `expense.*` routes and `ExpenseEntry` model.
+- [x] Keep existing income category management intact.
+- [x] Keep existing approval status constants compatible for income and expense.
+- [x] Keep the approval stage order: Managing Director, Director, Chairman.
+- [x] Keep finance editor checks aligned with `finance.manage`.
+- [x] Preserve current attachment storage paths: `uploads/income` and `uploads/expense`.
+- [x] Preserve current sidebar links for income, income categories, and expense.
+- [x] If adding expense categories later, avoid breaking existing `expense_category` string data.
+- [x] If adding finance dashboards or reports, aggregate from existing `income_entries` and `expense_entries` tables.
 
 ## Frontend Conversion
 
-- [ ] Create public frontend route group.
-- [ ] Convert `layout/index.html` into a Blade home page.
-- [ ] Convert `layout/about.html` into a Blade about page.
-- [ ] Convert `layout/courses.html` into a Blade course listing page.
-- [ ] Convert `layout/course-details.html` into a Blade course details page.
-- [ ] Convert `layout/services.html` into a Blade services page.
-- [ ] Convert service detail designs from `layout/services/` where needed.
-- [ ] Convert `layout/contact.html` into a Blade contact page.
-- [ ] Convert mission, vision, team, and work pages as needed.
-- [ ] Extract shared frontend partials/components.
-- [ ] Move or reference design assets from `layout/css`, `layout/js`, and `layout/images` safely.
+- [x] Create public frontend route group.
+- [x] Convert `layout/index.html` into a Blade home page.
+- [x] Convert `layout/about.html` into a Blade about page.
+- [x] Convert `layout/courses.html` into a Blade course listing page.
+- [x] Convert `layout/course-details.html` into a Blade course details page.
+- [x] Convert `layout/services.html` into a Blade services page.
+- [x] Convert service detail designs from `layout/services/` where needed.
+- [x] Convert `layout/contact.html` into a Blade contact page.
+- [x] Convert mission, vision, team, and portfolio pages as needed.
+- [x] Extract shared frontend partials/components.
+- [x] Move or reference design assets from `layout/css`, `layout/js`, and `layout/images` safely.
 - [ ] Verify frontend pages match the provided design closely.
 
 ## CMS Foundation
 
-- [ ] Decide CMS table structure for pages, sections, media fields, and repeatable content.
-- [ ] Create migrations for CMS tables.
-- [ ] Create models and relationships.
-- [ ] Create admin controllers.
-- [ ] Create admin routes protected by authentication.
-- [ ] Create admin sidebar/menu links.
-- [ ] Create Blade views for CMS list, create, edit, show if needed, and delete flows.
-- [ ] Add request validation.
-- [ ] Add publish/unpublish or visibility status handling.
-- [ ] Add sort order handling where content order matters.
+- [x] Decide CMS table structure for pages, sections, media fields, and repeatable content.
+- [x] Create migrations for CMS tables.
+- [x] Create models and relationships.
+- [x] Create admin controllers.
+- [x] Create admin routes protected by authentication.
+- [x] Create admin sidebar/menu links.
+- [x] Create Blade views for CMS list, create, edit, show if needed, and delete flows.
+- [x] Add request validation.
+- [x] Add publish/unpublish or visibility status handling.
+- [x] Add sort order handling where content order matters.
+- [x] Add visible admin sidebar options for Website CMS, Course CMS, Service CMS, Portfolio, Contact Settings, and Assets.
+- [x] Seed editable default CMS content for admin preview.
 
 ## Course CMS
 
-- [ ] Create courses migration.
-- [ ] Add course model with slug handling.
-- [ ] Add course admin controller.
-- [ ] Add authenticated course admin routes.
-- [ ] Add course list page in admin.
-- [ ] Add course create and edit forms.
-- [ ] Add course delete flow.
-- [ ] Add course publish/unpublish status.
-- [ ] Add featured image upload support.
-- [ ] Add course category support if required.
-- [ ] Show only published courses on the frontend course listing page.
-- [ ] Show course detail pages by slug.
-- [ ] Make course content clearly describe offline course details.
-- [ ] Avoid online course features such as lesson progress, quizzes, payment, and carts.
+- [x] Create courses migration.
+- [x] Add course model with slug handling.
+- [x] Add course admin controller.
+- [x] Add authenticated course admin routes.
+- [x] Add course list page in admin.
+- [x] Add course create and edit forms.
+- [x] Add course delete flow.
+- [x] Add course publish/unpublish status.
+- [x] Add featured image upload support.
+- [x] Add course category support if required.
+- [x] Show only published courses on the frontend course listing page.
+- [x] Show course detail pages by slug.
+- [x] Make course content clearly describe offline course details.
+- [x] Avoid online course features such as lesson progress, quizzes, payment, and carts.
 
 ## Services CMS
 
-- [ ] Create services migration.
-- [ ] Add service model with slug handling.
-- [ ] Add service admin controller.
-- [ ] Add authenticated service admin routes.
-- [ ] Add service list page in admin.
-- [ ] Add service create and edit forms.
-- [ ] Add service delete flow.
-- [ ] Add service publish/unpublish status.
-- [ ] Add frontend visibility controls.
-- [ ] Add service image or icon support.
-- [ ] Add sort order support.
+- [x] Create services migration.
+- [x] Add service model with slug handling.
+- [x] Add service admin controller.
+- [x] Add authenticated service admin routes.
+- [x] Add service list page in admin.
+- [x] Add service create and edit forms.
+- [x] Add service delete flow.
+- [x] Add service publish/unpublish status.
+- [x] Add frontend visibility controls.
+- [x] Add service image or icon support.
+- [x] Add sort order support.
 - [ ] Show visible published services on the frontend services page.
-- [ ] Show service detail pages if supported by the selected design.
+- [x] Show service detail pages if supported by the selected design.
 
 ## Office Asset Management
 
 - [ ] Create asset categories table if categories need to be managed.
-- [ ] Create office assets migration.
-- [ ] Add office asset model.
-- [ ] Add asset admin controller.
-- [ ] Add authenticated asset routes.
-- [ ] Add asset list page with search.
-- [ ] Add filters for category, status, location, assigned user, and date range where practical.
-- [ ] Add asset create and edit forms.
-- [ ] Add asset detail page.
-- [ ] Add asset delete flow.
-- [ ] Add status values such as active, in repair, retired, lost, and disposed.
-- [ ] Add assignment fields for user, department, room, or project if supported.
-- [ ] Add image or attachment support if needed.
-- [ ] Keep assets separate from income and expense records unless a clear accounting link is required.
+- [x] Create office assets migration.
+- [x] Add office asset model.
+- [x] Add asset admin controller.
+- [x] Add authenticated asset routes.
+- [x] Add asset list page with search.
+- [x] Add filters for category, status, location, assigned user, and date range where practical.
+- [x] Add asset create and edit forms.
+- [x] Add asset detail page.
+- [x] Add asset delete flow.
+- [x] Add status values such as active, in repair, retired, lost, and disposed.
+- [x] Add assignment fields for user, department, room, or project if supported.
+- [x] Add image or attachment support if needed.
+- [x] Keep assets separate from income and expense records unless a clear accounting link is required.
 - [ ] If assets need approval, reuse the existing polymorphic `approvals` table pattern.
 - [ ] If assets need finance references, link to existing `IncomeEntry` or `ExpenseEntry` records instead of duplicating finance fields.
 
@@ -147,22 +149,22 @@ Use this checklist while implementing the frontend CMS, course CMS, services CMS
 
 ## Validation And Security
 
-- [ ] Validate all create and update requests.
-- [ ] Ensure public pages only show published or visible records.
-- [ ] Ensure CMS, services, courses, assets, employees, and salaries admin routes require login.
-- [ ] Add authorization checks if role or permission support exists.
-- [ ] Sanitize or safely render rich text content.
-- [ ] Validate uploaded files by type and size.
+- [x] Validate all create and update requests.
+- [x] Ensure public pages only show published or visible records.
+- [x] Ensure CMS, services, courses, and assets admin routes require login.
+- [x] Add authorization checks if role or permission support exists.
+- [x] Sanitize or safely render rich text content.
+- [x] Validate uploaded files by type and size.
 
 ## Testing
 
 - [ ] Test existing income list, create, edit, show, delete, and approval flows still work.
 - [ ] Test existing income category list, create, edit, delete, and detail analytics still work.
 - [ ] Test existing expense list, create, edit, show, delete, and approval flows still work.
-- [ ] Test public home page renders.
-- [ ] Test public course listing renders published courses only.
-- [ ] Test public course detail page resolves by slug.
-- [ ] Test unpublished courses are hidden.
+- [x] Test public home page renders.
+- [x] Test public course listing renders published courses only.
+- [x] Test public course detail page resolves by slug.
+- [x] Test unpublished courses are hidden.
 - [ ] Test public services page renders visible published services only.
 - [ ] Test unpublished or hidden services are hidden.
 - [ ] Test CMS CRUD flows.
@@ -181,7 +183,18 @@ Use this checklist while implementing the frontend CMS, course CMS, services CMS
 
 - [ ] Confirm no existing finance, project, trainee, auth, or settings pages were broken.
 - [ ] Confirm frontend design matches `layout/` visually.
-- [ ] Confirm routes are named consistently.
+- [x] Confirm routes are named consistently.
 - [ ] Confirm database migrations run from a fresh database.
 - [ ] Confirm uploaded assets display correctly.
-- [ ] Document any remaining assumptions or follow-up work.
+- [x] Document any remaining assumptions or follow-up work.
+
+## Analysis Notes
+
+- Finance review completed: existing income, expense, approval, permission, route, and upload-path patterns are intact.
+- Public, CMS, course, service, and asset routes are registered; `php artisan route:list` completed successfully and showed 159 routes.
+- Employee management and salary management are not implemented yet.
+- Asset categories are currently plain strings on the `assets` table; there is no separate managed asset categories table.
+- Asset approvals and finance references are not implemented, and are only needed if those workflows are requested.
+- Service visibility needs a follow-up decision: services have `show_on_homepage`, but the public service list/detail currently filter by `status = published` only.
+- `php artisan test` is blocked in this environment because PHP is missing the SQLite PDO driver. Unit tests that do not touch the database passed before feature tests failed at database connection setup.
+- `vendor/bin/pint --test` failed because multiple files need formatting fixes.

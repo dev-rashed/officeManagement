@@ -7,11 +7,14 @@ use App\Models\IncomeCategory;
 use App\Models\IncomeEntry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Gate;
 
 class IncomeCategoryController extends Controller
 {
     public function index()
     {
+        Gate::authorize('finance.categories.manage');
+
         $totalCategories = IncomeCategory::count();
         $activeCategories = IncomeCategory::where('status', IncomeCategory::STATUS_ACTIVE)->count();
         $inactiveCategories = IncomeCategory::where('status', IncomeCategory::STATUS_INACTIVE)->count();
@@ -25,6 +28,8 @@ class IncomeCategoryController extends Controller
 
     public function data(Request $request)
     {
+        Gate::authorize('finance.categories.manage');
+
         $query = IncomeCategory::query()->orderBy('name');
 
         $totalRecords = IncomeCategory::count();
@@ -85,7 +90,9 @@ class IncomeCategoryController extends Controller
 
     public function show(IncomeCategory $category)
     {
-        $totalEntries = IncomeEntry::where('source_category', $category->name)->count();
+        Gate::authorize('finance.categories.manage');
+
+        $totalEntries =IncomeEntry::where('source_category', $category->name)->count();
         $totalAmount = (float) IncomeEntry::where('source_category', $category->name)->sum('amount');
         $avgAmount = $totalEntries > 0 ? $totalAmount / $totalEntries : 0;
 
@@ -119,6 +126,8 @@ class IncomeCategoryController extends Controller
 
     public function store(Request $request)
     {
+        Gate::authorize('finance.categories.manage');
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:income_categories,name'],
             'status' => ['required', 'string', 'in:active,inactive'],
@@ -134,6 +143,8 @@ class IncomeCategoryController extends Controller
 
     public function update(Request $request, IncomeCategory $category)
     {
+        Gate::authorize('finance.categories.manage');
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:income_categories,name,'.$category->id],
             'status' => ['required', 'string', 'in:active,inactive'],
@@ -146,6 +157,8 @@ class IncomeCategoryController extends Controller
 
     public function destroy(IncomeCategory $category)
     {
+        Gate::authorize('finance.categories.manage');
+
         $category->delete();
 
         return response()->json(['message' => 'Category deleted successfully.']);

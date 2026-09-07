@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PageSection extends Model
 {
-    #[Fillable([
+    protected $fillable = [
         'page_slug',
         'section_key',
         'title',
@@ -17,7 +17,7 @@ class PageSection extends Model
         'button_link',
         'visibility',
         'sort_order',
-    ])]
+    ];
 
     public function scopeVisible($query)
     {

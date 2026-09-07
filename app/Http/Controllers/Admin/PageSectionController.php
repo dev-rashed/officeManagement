@@ -26,7 +26,7 @@ class PageSectionController extends Controller
             $length = $request->input('length');
             $search = $request->input('search.value');
             $orderColumnIndex = $request->input('order.0.column');
-            $orderDirection = $request->input('order.0.dir');
+            $orderDirection = in_array($request->input('order.0.dir'), ['asc', 'desc'], true) ? $request->input('order.0.dir') : 'asc';
 
             $query = PageSection::query();
 
@@ -63,8 +63,7 @@ class PageSectionController extends Controller
                             <i class="fi fi-rr-edit"></i>
                         </a>
                         <form action="' . route('admin.page-sections.destroy', $section->id) . '" method="POST" onsubmit="return confirm(\'Are you sure you want to delete this section?\');" style="display: inline;">
-                            @csrf
-                            @method("DELETE")
+                            ' . csrf_field() . method_field('DELETE') . '
                             <button type="submit" class="btn btn-outline-danger btn-sm">
                                 <i class="fi fi-rr-trash"></i>
                             </button>
@@ -131,11 +130,11 @@ class PageSectionController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(PageSection $section)
+    public function edit(PageSection $page_section)
     {
         Gate::authorize('cms.manage');
         return view('pages.admin.cms.page-sections.form', [
-            'section' => $section,
+            'section' => $page_section,
             'mode' => 'edit'
         ]);
     }
@@ -143,7 +142,7 @@ class PageSectionController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, PageSection $section)
+    public function update(Request $request, PageSection $page_section)
     {
         Gate::authorize('cms.manage');
 
@@ -163,14 +162,14 @@ class PageSectionController extends Controller
         // Handle image upload
         if ($request->hasFile('image_path')) {
             // Delete old image if exists
-            if ($section->image_path) {
-                Storage::disk('public')->delete($section->image_path);
+            if ($page_section->image_path) {
+                Storage::disk('public')->delete($page_section->image_path);
             }
             $path = $request->file('image_path')->store('uploads/cms', 'public');
             $validated['image_path'] = $path;
         }
 
-        $section->update($validated);
+        $page_section->update($validated);
 
         return redirect()->route('admin.page-sections.index')
             ->with('success', 'Page section updated successfully.');
@@ -179,16 +178,16 @@ class PageSectionController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(PageSection $section)
+    public function destroy(PageSection $page_section)
     {
         Gate::authorize('cms.manage');
 
         // Delete associated image
-        if ($section->image_path) {
-            Storage::disk('public')->delete($section->image_path);
+        if ($page_section->image_path) {
+            Storage::disk('public')->delete($page_section->image_path);
         }
 
-        $section->delete();
+        $page_section->delete();
 
         return redirect()->route('admin.page-sections.index')
             ->with('success', 'Page section deleted successfully.');

@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\FieldDefinition;
+use App\Models\Project;
 use App\Models\Trainee;
+use App\Services\CustomFieldService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
@@ -15,16 +19,19 @@ class TraineeController extends Controller
         $withPhoto = Trainee::whereNotNull('photo_path')->count();
         $withEmail = Trainee::whereNotNull('email')->count();
 
+        $projects = Project::orderBy('title')->get(['id', 'title']);
+
         return view('pages.projects.trainees.index', compact(
             'totalTrainees',
             'withPhoto',
             'withEmail',
+            'projects',
         ));
     }
 
     public function data(Request $request)
     {
-        $query = Trainee::query()->latest();
+        $query = Trainee::query()->with('fieldValues')->latest();
         $totalRecords = Trainee::count();
 
         if ($search = $request->input('search.value')) {
@@ -60,6 +67,8 @@ class TraineeController extends Controller
                 .' data-father-name="'.e($trainee->father_name ?? '').'"'
                 .' data-mother-name="'.e($trainee->mother_name ?? '').'"'
                 .' data-emergency-contact-number="'.e($trainee->emergency_contact_number ?? '').'"'
+                .' data-project-id="'.e((string) $trainee->project_id).'"'
+                .' data-custom-values="'.e($this->customValuesJson($trainee)).'"'
                 .'>Edit</button>';
             $actions .= '<button type="button" class="trainee-action-btn is-danger trainee-delete-btn" data-destroy-url="'.route('projects.trainees.destroy', $trainee).'">Delete</button>';
             $actions .= '</div>';
@@ -93,6 +102,12 @@ class TraineeController extends Controller
 
         $trainee = Trainee::create($data);
 
+        app(CustomFieldService::class)->save(
+            $trainee,
+            $trainee->project_id,
+            $request->input(CustomFieldService::INPUT_PREFIX, []),
+        );
+
         return response()->json([
             'message' => 'Trainee created successfully.',
             'trainee' => $trainee,
@@ -110,6 +125,12 @@ class TraineeController extends Controller
 
         $trainee->update($data);
 
+        app(CustomFieldService::class)->save(
+            $trainee,
+            $trainee->project_id,
+            $request->input(CustomFieldService::INPUT_PREFIX, []),
+        );
+
         return response()->json(['message' => 'Trainee updated successfully.']);
     }
 
@@ -121,9 +142,58 @@ class TraineeController extends Controller
         return response()->json(['message' => 'Trainee deleted successfully.']);
     }
 
+    /**
+     * Stored custom answers keyed by definition id, ready for the edit modal.
+     *
+     * Multi-select answers are stored as a JSON array and must come back as an
+     * array; every other type is a plain string and is returned unchanged.
+     */
+    private function customValuesJson(Trainee $trainee): string
+    {
+        $values = [];
+
+        foreach ($trainee->fieldValues as $fieldValue) {
+            $raw = $fieldValue->value;
+            $decoded = is_string($raw) ? json_decode($raw, true) : null;
+
+            $values[$fieldValue->field_definition_id] = is_array($decoded) ? $decoded : $raw;
+        }
+
+        return json_encode($values, JSON_UNESCAPED_UNICODE) ?: '{}';
+    }
+
+    /**
+     * The custom fields a project asks for, so the registration modal can
+     * rebuild itself when the project selector changes.
+     */
+    public function fields(Request $request, CustomFieldService $fields)
+    {
+        $request->validate(['project_id' => ['nullable', 'integer', 'exists:projects,id']]);
+
+        $projectId = $request->integer('project_id') ?: null;
+
+        return response()->json([
+            'fields' => $fields->definitionsFor($projectId)->map(fn (FieldDefinition $d) => [
+                'id' => $d->id,
+                'key' => $d->key,
+                'label' => $d->label,
+                'type' => $d->type,
+                'options' => $d->options ?? [],
+                'is_required' => $d->is_required,
+                'help_text' => $d->help_text,
+                'placeholder' => $d->placeholder,
+                'is_shared' => $d->project_id === null,
+            ])->values(),
+        ]);
+    }
+
     private function validatedData(Request $request, ?Trainee $trainee = null): array
     {
-        return $request->validate([
+        $fields = app(CustomFieldService::class);
+        $projectId = $request->integer('project_id') ?: null;
+
+        $rules = [
+            'project_id' => ['nullable', 'integer', 'exists:projects,id'],
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['nullable', 'string', 'max:255'],
             'nid' => ['required', 'string', 'max:255', Rule::unique('trainees', 'nid')->ignore($trainee)],
@@ -134,6 +204,17 @@ class TraineeController extends Controller
             'father_name' => ['nullable', 'string', 'max:255'],
             'mother_name' => ['nullable', 'string', 'max:255'],
             'emergency_contact_number' => ['nullable', 'string', 'max:255'],
-        ]);
+        ];
+
+        // Custom field rules come from the chosen project's definitions, so the
+        // form and the (future) importer validate identically.
+        $validated = $request->validate(
+            $rules + $fields->rulesFor($projectId),
+            [],
+            $fields->attributeNamesFor($projectId),
+        );
+
+        // Keep only the core columns -- custom answers are stored separately.
+        return Arr::except($validated, [CustomFieldService::INPUT_PREFIX]);
     }
 }

@@ -96,6 +96,17 @@
             </div>
 
             <form id="trainee-form" class="mt-5 trainee-grid" enctype="multipart/form-data">
+                <div class="sm:col-span-2">
+                    <label for="project-id" class="trainee-label">{{ __('Project') }}</label>
+                    <select id="project-id" name="project_id" class="trainee-input">
+                        <option value="">{{ __('No project') }}</option>
+                        @foreach ($projects as $project)
+                            <option value="{{ $project->id }}">{{ $project->title }}</option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 text-xs text-slate-400">{{ __('Decides which extra questions this form asks.') }}</p>
+                    <p data-error-for="project_id" class="trainee-error hidden"></p>
+                </div>
                 <div>
                     <label for="first-name" class="trainee-label">{{ __('First Name') }}</label>
                     <input id="first-name" name="first_name" type="text" class="trainee-input">
@@ -139,6 +150,15 @@
                 <div>
                     <label for="emergency-contact-number" class="trainee-label">{{ __('Emergency Contact Number') }}</label>
                     <input id="emergency-contact-number" name="emergency_contact_number" type="text" class="trainee-input">
+                </div>
+
+                {{-- Filled from the chosen project's registration fields --}}
+                <div id="custom-fields-section" class="sm:col-span-2 hidden">
+                    <div class="my-1 flex items-center gap-2">
+                        <span class="text-[0.62rem] font-bold uppercase tracking-wider text-slate-400" id="custom-fields-heading">{{ __('Project questions') }}</span>
+                        <span class="h-px flex-1 bg-slate-200 dark:bg-zinc-700"></span>
+                    </div>
+                    <div id="custom-fields" class="trainee-grid mt-2"></div>
                 </div>
             </form>
 
@@ -202,13 +222,108 @@
                 if (input) input.classList.add('border-rose-500');
             });
         };
+        // ---------- project-driven custom fields ----------
+
+        const FIELDS_URL = @js(route('projects.trainees.fields'));
+        const projectSelect = document.getElementById('project-id');
+        const customSection = document.getElementById('custom-fields-section');
+        const customWrap = document.getElementById('custom-fields');
+
+        const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
+            { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+        ));
+
+        const renderCustomField = (f, value) => {
+            const name = `custom_fields[${f.id}]`;
+            const id = `cf-${f.id}`;
+            const req = f.is_required ? ' <span class="text-rose-600">*</span>' : '';
+            const wide = (f.type === 'textarea' || f.type === 'multiselect') ? ' sm:col-span-2' : '';
+            let control;
+
+            switch (f.type) {
+                case 'textarea':
+                    control = `<textarea id="${id}" name="${name}" rows="3" class="trainee-input" placeholder="${esc(f.placeholder)}">${esc(value ?? '')}</textarea>`;
+                    break;
+                case 'number':
+                    control = `<input id="${id}" name="${name}" type="number" step="any" class="trainee-input" placeholder="${esc(f.placeholder)}" value="${esc(value ?? '')}">`;
+                    break;
+                case 'date':
+                    control = `<input id="${id}" name="${name}" type="date" class="trainee-input" value="${esc(value ?? '')}">`;
+                    break;
+                case 'select':
+                    control = `<select id="${id}" name="${name}" class="trainee-input"><option value="">${@js(__('Select...'))}</option>`
+                        + f.options.map((o) => `<option value="${esc(o)}"${String(value) === String(o) ? ' selected' : ''}>${esc(o)}</option>`).join('')
+                        + '</select>';
+                    break;
+                case 'radio':
+                    control = '<div class="flex flex-wrap gap-3 pt-1">' + f.options.map((o, i) => `
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-zinc-300">
+                            <input type="radio" name="${name}" value="${esc(o)}" id="${id}-${i}" ${String(value) === String(o) ? 'checked' : ''} class="size-3.5">
+                            ${esc(o)}
+                        </label>`).join('') + '</div>';
+                    break;
+                case 'multiselect': {
+                    const selected = Array.isArray(value) ? value.map(String) : [];
+                    control = '<div class="flex flex-wrap gap-3 pt-1">' + f.options.map((o, i) => `
+                        <label class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-zinc-300">
+                            <input type="checkbox" name="${name}[]" value="${esc(o)}" id="${id}-${i}" ${selected.includes(String(o)) ? 'checked' : ''} class="size-3.5 rounded">
+                            ${esc(o)}
+                        </label>`).join('') + '</div>';
+                    break;
+                }
+                case 'checkbox':
+                    control = `<div class="pt-1"><label class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-zinc-300">
+                        <input type="hidden" name="${name}" value="0">
+                        <input type="checkbox" name="${name}" value="1" id="${id}" ${String(value) === '1' ? 'checked' : ''} class="size-3.5 rounded">
+                        ${@js(__('Yes'))}
+                    </label></div>`;
+                    break;
+                default:
+                    control = `<input id="${id}" name="${name}" type="text" class="trainee-input" placeholder="${esc(f.placeholder)}" value="${esc(value ?? '')}">`;
+            }
+
+            return `<div class="${wide.trim()}">
+                <label for="${id}" class="trainee-label">${esc(f.label)}${req}</label>
+                ${control}
+                ${f.help_text ? `<p class="mt-1 text-xs text-slate-400">${esc(f.help_text)}</p>` : ''}
+                <p data-error-for="custom_fields.${f.id}" class="trainee-error hidden"></p>
+            </div>`;
+        };
+
+        const loadCustomFields = async (projectId, values = {}) => {
+            customWrap.innerHTML = '';
+            customSection.classList.add('hidden');
+
+            try {
+                const url = new URL(FIELDS_URL, window.location.origin);
+                if (projectId) url.searchParams.set('project_id', projectId);
+
+                const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                if (!res.ok) return;
+
+                const { fields } = await res.json();
+                if (!fields.length) return;
+
+                customWrap.innerHTML = fields.map((f) => renderCustomField(f, values[f.id])).join('');
+                customSection.classList.remove('hidden');
+            } catch {
+                // A failure here must not block the core registration form.
+            }
+        };
+
+        projectSelect.addEventListener('change', () => loadCustomFields(projectSelect.value));
+
         const setMode = (mode, data = {}) => {
             clearErrors();
             form.reset();
+            customWrap.innerHTML = '';
+            customSection.classList.add('hidden');
+
             if (mode === 'create') {
                 editingTraineeId = null;
                 title.textContent = 'Add Trainee';
                 submitBtn.textContent = 'Save Trainee';
+                loadCustomFields(projectSelect.value);
                 return;
             }
 
@@ -216,9 +331,12 @@
             title.textContent = 'Edit Trainee';
             submitBtn.textContent = 'Update Trainee';
             Object.entries(data).forEach(([key, value]) => {
+                if (key === 'photo' || key === 'custom_values') return;
                 const input = form.querySelector(`[name="${key}"]`);
-                if (input && key !== 'photo') input.value = value ?? '';
+                if (input) input.value = value ?? '';
             });
+
+            loadCustomFields(data.project_id, data.custom_values ?? {});
         };
 
         submitBtn.addEventListener('click', async () => {
@@ -248,6 +366,8 @@
         $(document).on('click', '.trainee-edit-btn', function () {
             setMode('edit', {
                 id: $(this).data('trainee-id'),
+                project_id: $(this).data('project-id') || '',
+                custom_values: $(this).data('custom-values') || {},
                 first_name: $(this).data('first-name'),
                 last_name: $(this).data('last-name'),
                 nid: $(this).data('nid'),

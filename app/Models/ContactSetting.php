@@ -6,12 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class ContactSetting extends Model
 {
-    #[Fillable([
+    protected $fillable = [
         'email',
         'phone',
         'address',
         'social_links',
-    ])]
+    ];
 
     protected $casts = [
         'social_links' => 'array',
