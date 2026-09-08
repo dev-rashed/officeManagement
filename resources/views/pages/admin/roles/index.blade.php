@@ -159,7 +159,7 @@
     </div>
 
     {{-- Role modal --}}
-    <div id="role-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" aria-hidden="true">
+    <div id="role-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4" aria-hidden="true">
         <div id="role-modal-overlay" class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
         <div class="relative w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl dark:border-zinc-700 dark:bg-zinc-900">
             <div class="flex items-start justify-between gap-3">
@@ -193,7 +193,12 @@
     </div>
 
     <style>
-        .rp-wrap { background:#fff; border:1px solid #dbe4f0; border-radius:16px; overflow-x:auto; }
+        /*
+         * isolate keeps the sticky header and first column's z-index inside
+         * this box. Without it they sit in the page's root stacking context and
+         * paint straight over the modal.
+         */
+        .rp-wrap { background:#fff; border:1px solid #dbe4f0; border-radius:16px; overflow-x:auto; isolation:isolate; position:relative; z-index:0; }
         .rp-table { border-collapse:separate; border-spacing:0; min-width:640px; width:100%; }
         .rp-corner { background:#f8fafc; border-bottom:1px solid #e2e8f0; color:#64748b; font-size:.66rem; font-weight:700; left:0; letter-spacing:.06em; padding:.7rem .9rem; position:sticky; text-align:left; text-transform:uppercase; z-index:2; }
         .rp-role { background:#f8fafc; border-bottom:1px solid #e2e8f0; border-left:1px solid #eef2f7; min-width:8.5rem; padding:.7rem .6rem; text-align:center; vertical-align:top; }

@@ -4,11 +4,14 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
@@ -36,6 +39,30 @@ class FortifyServiceProvider extends ServiceProvider
      */
     private function configureActions(): void
     {
+        /*
+         * A disabled account must fail at the login form itself, not just be
+         * bounced by middleware afterwards -- otherwise a disabled user still
+         * passes the password check and reaches the two-factor challenge.
+         *
+         * The message is deliberately the same shape as a wrong password, so
+         * the form cannot be used to work out which addresses exist.
+         */
+        Fortify::authenticateUsing(function (Request $request) {
+            $user = User::where('email', $request->input(Fortify::username()))->first();
+
+            if (! $user || ! Hash::check($request->input('password'), $user->password)) {
+                return null;
+            }
+
+            if (! $user->is_active) {
+                throw ValidationException::withMessages([
+                    Fortify::username() => __('Your account has been disabled. Please contact an administrator.'),
+                ]);
+            }
+
+            return $user;
+        });
+
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::createUsersUsing(CreateNewUser::class);
     }

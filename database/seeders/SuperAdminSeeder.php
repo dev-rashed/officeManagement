@@ -41,11 +41,58 @@ class SuperAdminSeeder extends Seeder
         $user->role = User::ROLE_SUPERADMIN;
         $user->is_protected = true;
         $user->email_verified_at ??= now();
+
+        // Only reset the password when the environment explicitly asks for
+        // one. Without SUPERADMIN_PASSWORD set, re-seeding must never quietly
+        // change the password of a live account.
+        $supplied = env('SUPERADMIN_PASSWORD');
+        $passwordReset = false;
+
+        if (filled($supplied)) {
+            $user->password = Hash::make($supplied);
+            $passwordReset = true;
+        }
+
         $user->save();
 
         Role::flushCache();
 
-        $this->command?->info("Superadmin: {$user->email} already existed — promoted from '{$previous}' and protected. Password unchanged.");
+        $this->command?->info("Superadmin: {$user->email} already existed — promoted from '{$previous}' and protected.");
+        $this->command?->line($passwordReset
+            ? '  Password reset to the value of SUPERADMIN_PASSWORD.'
+            : '  Password left unchanged (set SUPERADMIN_PASSWORD to reset it).');
+
+        $this->warnIfWeak($supplied);
+    }
+
+    /**
+     * The protected superadmin cannot be deleted or demoted, so a weak password
+     * on it is worth saying out loud.
+     */
+    private function warnIfWeak(?string $password): void
+    {
+        if (blank($password)) {
+            return;
+        }
+
+        $problems = [];
+
+        if (strlen($password) < 12) {
+            $problems[] = 'shorter than 12 characters';
+        }
+
+        if (in_array(strtolower($password), ['password', 'secret', '12345678', 'admin', 'letmein', 'password123'], true)) {
+            $problems[] = 'one of the most commonly guessed passwords';
+        }
+
+        if ($problems === []) {
+            return;
+        }
+
+        $this->command?->newLine();
+        $this->command?->warn('  Warning: this password is '.implode(' and ', $problems).'.');
+        $this->command?->line('  It belongs to an account that cannot be deleted or demoted, and the');
+        $this->command?->line('  application sends real email. Change it before this reaches production.');
     }
 
     private function create(string $email, string $name): void
@@ -82,5 +129,7 @@ class SuperAdminSeeder extends Seeder
         }
 
         $this->command?->line('  This account is protected: it cannot be deleted or moved off superadmin.');
+
+        $this->warnIfWeak($supplied);
     }
 }

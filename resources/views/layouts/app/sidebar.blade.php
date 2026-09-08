@@ -123,6 +123,11 @@
                             {{ __('Notification Rules') }}
                         </flux:sidebar.item>
                     @endcan
+                    @can('users.manage')
+                        <flux:sidebar.item icon="users" :href="route('admin.users.index')" :current="request()->routeIs('admin.users.*')" wire:navigate>
+                            {{ __('Users') }}
+                        </flux:sidebar.item>
+                    @endcan
                     @can('roles.manage')
                         <flux:sidebar.item icon="shield-check" :href="route('admin.roles.index')" :current="request()->routeIs('admin.roles.*')" wire:navigate>
                             {{ __('Roles & Permissions') }}

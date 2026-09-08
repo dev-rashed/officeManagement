@@ -164,3 +164,13 @@ Route::middleware(['auth', 'verified', 'throttle:admin-write'])->prefix('admin')
     Route::put('roles/{role}/permissions', [\App\Http\Controllers\Admin\RoleController::class, 'updatePermissions'])->name('roles.permissions');
     Route::delete('roles/{role}', [\App\Http\Controllers\Admin\RoleController::class, 'destroy'])->name('roles.destroy');
 });
+
+// User accounts — gated on users.manage; superadmin rules enforced in the controller
+Route::middleware(['auth', 'verified', 'throttle:admin-write'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
+    Route::get('users/data', [\App\Http\Controllers\Admin\UserController::class, 'data'])->name('users.data');
+    Route::post('users', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('users.store');
+    Route::put('users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'update'])->name('users.update');
+    Route::post('users/{user}/toggle', [\App\Http\Controllers\Admin\UserController::class, 'toggle'])->name('users.toggle');
+    Route::delete('users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('users.destroy');
+});

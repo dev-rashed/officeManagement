@@ -31,6 +31,19 @@ class User extends Authenticatable
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
 
     /**
+     * Column defaults mirrored onto new instances.
+     *
+     * Without these, a freshly created model carries null for these flags
+     * until it is reloaded -- so code that creates a user and immediately acts
+     * on that instance would read `is_active` as null and treat the brand new
+     * account as disabled.
+     */
+    protected $attributes = [
+        'is_active' => true,
+        'is_protected' => false,
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -42,7 +55,24 @@ class User extends Authenticatable
             'two_factor_confirmed_at' => 'datetime',
             'password' => 'hashed',
             'is_protected' => 'boolean',
+            'is_active' => 'boolean',
+            'disabled_at' => 'datetime',
         ];
+    }
+
+    public function isActive(): bool
+    {
+        return (bool) $this->is_active;
+    }
+
+    public function disabledBy(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(self::class, 'disabled_by');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 
     /**
@@ -65,6 +95,17 @@ class User extends Authenticatable
         });
 
         static::updating(function (self $user): void {
+            // Disabling is as good as removing, so it gets the same guards.
+            if ($user->isDirty('is_active') && ! $user->is_active) {
+                if ($user->is_protected) {
+                    throw ProtectedUserException::cannotDisable($user->name);
+                }
+
+                if ($user->getOriginal('role') === self::ROLE_SUPERADMIN && static::activeSuperadminCount() <= 1) {
+                    throw ProtectedUserException::lastSuperadmin('Disabling');
+                }
+            }
+
             if (! $user->isDirty('role')) {
                 return;
             }
@@ -88,6 +129,14 @@ class User extends Authenticatable
     public static function superadminCount(): int
     {
         return static::query()->where('role', self::ROLE_SUPERADMIN)->count();
+    }
+
+    public static function activeSuperadminCount(): int
+    {
+        return static::query()
+            ->where('role', self::ROLE_SUPERADMIN)
+            ->where('is_active', true)
+            ->count();
     }
 
     /** True when this account may not be deleted or demoted. */

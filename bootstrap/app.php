@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->appendToGroup('api', \App\Http\Middleware\AddApiKeyHeader::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\LogActivity::class);
+        // Ends the session of an account that was disabled while signed in.
+        $middleware->appendToGroup('web', \App\Http\Middleware\EnsureUserIsActive::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
