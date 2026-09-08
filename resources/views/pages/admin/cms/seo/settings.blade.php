@@ -104,12 +104,12 @@
                     </div>
 
                     <div class="sm:col-span-2">
-                        <label for="og" class="seo-label">{{ __('Default share image') }}</label>
-                        @if ($settings->default_og_image)
-                            <img src="{{ Storage::url($settings->default_og_image) }}" alt="" class="mb-2 h-24 rounded-lg border border-slate-200 object-cover">
-                        @endif
-                        <input id="og" name="default_og_image" type="file" accept="image/*" class="seo-input">
-                        <p class="seo-hint">{{ __('Shown when a page is shared on Facebook, LinkedIn or WhatsApp. 1200×630 works best.') }}</p>
+                        <x-image-upload
+                            name="default_og_image"
+                            :label="__('Default share image')"
+                            :value="$settings->default_og_image"
+                            hint="{{ __('Shown when a page is shared on Facebook, LinkedIn or WhatsApp. 1200×630 works best.') }}"
+                        />
                         @error('default_og_image') <p class="seo-err">{{ $message }}</p> @enderror
                     </div>
                 </div>
@@ -133,11 +133,13 @@
                     </div>
 
                     <div>
-                        <label for="logo" class="seo-label">{{ __('Logo') }}</label>
-                        @if ($settings->organization_logo)
-                            <img src="{{ Storage::url($settings->organization_logo) }}" alt="" class="mb-2 h-12 rounded border border-slate-200 object-contain">
-                        @endif
-                        <input id="logo" name="organization_logo" type="file" accept="image/*" class="seo-input">
+                        <x-image-upload
+                            name="organization_logo"
+                            :label="__('Logo')"
+                            :value="$settings->organization_logo"
+                            hint="{{ __('Used in search result structured data. Kept lossless so transparency survives.') }}"
+                            height="6rem"
+                        />
                     </div>
 
                     <div class="sm:col-span-2">

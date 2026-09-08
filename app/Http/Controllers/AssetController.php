@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Concerns\HandlesImageUploads;
 use App\Http\Controllers\Controller;
 use App\Models\Asset;
 use Illuminate\Http\Request;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\Gate;
 
 class AssetController extends Controller
 {
+    use HandlesImageUploads;
+
     /**
      * Display a listing of the resource.
      */
@@ -157,10 +160,7 @@ class AssetController extends Controller
             'attachment_path' => 'nullable|file|max:10240', // 10MB max
         ]);
 
-        if ($request->hasFile('attachment_path')) {
-            $path = $request->file('attachment_path')->store('uploads/assets', 'public');
-            $validated['attachment_path'] = $path;
-        }
+        $this->applyUpload($request, $validated, 'attachment_path', null, 'uploads/assets', 'document');
 
         Asset::create($validated);
 
@@ -213,13 +213,7 @@ class AssetController extends Controller
             'attachment_path' => 'nullable|file|max:10240',
         ]);
 
-        if ($request->hasFile('attachment_path')) {
-            if ($asset->attachment_path) {
-                Storage::disk('public')->delete($asset->attachment_path);
-            }
-            $path = $request->file('attachment_path')->store('uploads/assets', 'public');
-            $validated['attachment_path'] = $path;
-        }
+        $this->applyUpload($request, $validated, 'attachment_path', $asset->attachment_path, 'uploads/assets', 'document');
 
         $asset->update($validated);
 

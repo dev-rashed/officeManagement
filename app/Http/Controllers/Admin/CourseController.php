@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Concerns\HandlesImageUploads;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\CourseCategory;
@@ -12,6 +13,8 @@ use Illuminate\Support\Facades\Gate;
 
 class CourseController extends Controller
 {
+    use HandlesImageUploads;
+
     /**
      * Display a listing of the resource.
      */
@@ -119,10 +122,7 @@ class CourseController extends Controller
             'status' => 'required|in:draft,published',
         ]);
 
-        if ($request->hasFile('featured_image')) {
-            $path = $request->file('featured_image')->store('uploads/courses', 'public');
-            $validated['featured_image'] = $path;
-        }
+        $this->applyUpload($request, $validated, 'featured_image', null, 'uploads/courses', 'featured');
 
         Course::create($validated);
 
@@ -163,13 +163,7 @@ class CourseController extends Controller
             'status' => 'required|in:draft,published',
         ]);
 
-        if ($request->hasFile('featured_image')) {
-            if ($course->featured_image) {
-                Storage::disk('public')->delete($course->featured_image);
-            }
-            $path = $request->file('featured_image')->store('uploads/courses', 'public');
-            $validated['featured_image'] = $path;
-        }
+        $this->applyUpload($request, $validated, 'featured_image', $course->featured_image, 'uploads/courses', 'featured');
 
         $course->update($validated);
 

@@ -67,10 +67,14 @@
                     <input type="text" name="reference_number" value="{{ old('reference_number') }}" class="mt-2 w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm">
                 </label>
 
-                <label class="block lg:col-span-2">
-                    <span class="text-sm font-medium text-slate-700">{{ __('Attachment') }}</span>
-                    <input type="file" name="attachment" class="mt-2 w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm">
-                </label>
+                <div class="lg:col-span-2">
+                    <x-image-upload
+                        name="attachment"
+                        :label="__('Invoice / Receipt')"
+                        accept="image/*,application/pdf"
+                        hint="{{ __('Photograph the invoice or attach a PDF. Photos are optimised automatically; PDFs are stored as uploaded. Max 20 MB.') }}"
+                    />
+                </div>
 
                 <label class="block lg:col-span-2">
                     <span class="text-sm font-medium text-slate-700">{{ __('Description / Remarks') }}</span>

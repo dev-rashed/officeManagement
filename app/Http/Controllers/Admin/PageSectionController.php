@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Concerns\HandlesImageUploads;
 use App\Http\Controllers\Controller;
 use App\Models\PageSection;
 use Illuminate\Http\Request;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\Gate;
 
 class PageSectionController extends Controller
 {
+    use HandlesImageUploads;
+
     /**
      * Display a listing of the resource.
      */
@@ -116,10 +119,7 @@ class PageSectionController extends Controller
         ]);
 
         // Handle image upload
-        if ($request->hasFile('image_path')) {
-            $path = $request->file('image_path')->store('uploads/cms', 'public');
-            $validated['image_path'] = $path;
-        }
+        $this->applyUpload($request, $validated, 'image_path', null, 'uploads/cms', 'featured');
 
         PageSection::create($validated);
 
@@ -159,15 +159,7 @@ class PageSectionController extends Controller
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
-        // Handle image upload
-        if ($request->hasFile('image_path')) {
-            // Delete old image if exists
-            if ($page_section->image_path) {
-                Storage::disk('public')->delete($page_section->image_path);
-            }
-            $path = $request->file('image_path')->store('uploads/cms', 'public');
-            $validated['image_path'] = $path;
-        }
+        $this->applyUpload($request, $validated, 'image_path', $page_section->image_path, 'uploads/cms', 'featured');
 
         $page_section->update($validated);
 

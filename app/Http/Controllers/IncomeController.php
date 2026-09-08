@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Concerns\HandlesImageUploads;
 use App\Models\IncomeEntry;
 use App\Services\NotificationDispatcher;
 use Illuminate\Http\Request;
@@ -9,6 +10,8 @@ use Illuminate\Support\Facades\Storage;
 
 class IncomeController extends Controller
 {
+    use HandlesImageUploads;
+
     public function index()
     {
         $totalEntries = IncomeEntry::count();
@@ -102,9 +105,8 @@ class IncomeController extends Controller
             'description'      => ['nullable', 'string'],
         ]);
 
-        if ($request->hasFile('attachment')) {
-            $data['attachment_path'] = $request->file('attachment')->store('uploads/income', 'public');
-        }
+        // A photographed receipt is optimised; a PDF is stored as uploaded.
+        $this->applyUpload($request, $data, 'attachment', null, 'uploads/income', 'document', column: 'attachment_path');
 
         $data['status']     = IncomeEntry::STATUS_PENDING;
         $data['created_by'] = $request->user()->id;
@@ -150,10 +152,7 @@ class IncomeController extends Controller
             'description'      => ['nullable', 'string'],
         ]);
 
-        if ($request->hasFile('attachment')) {
-            Storage::disk('public')->delete($income->attachment_path);
-            $data['attachment_path'] = $request->file('attachment')->store('uploads/income', 'public');
-        }
+        $this->applyUpload($request, $data, 'attachment', $income->attachment_path, 'uploads/income', 'document', column: 'attachment_path');
 
         $income->update($data);
 

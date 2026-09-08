@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Concerns\HandlesImageUploads;
 use App\Http\Controllers\Controller;
 use App\Models\TeamMember;
 use Illuminate\Http\Request;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\Gate;
 
 class TeamMemberController extends Controller
 {
+    use HandlesImageUploads;
+
     /**
      * Display a listing of the resource.
      */
@@ -107,10 +110,7 @@ class TeamMemberController extends Controller
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
-        if ($request->hasFile('image_path')) {
-            $path = $request->file('image_path')->store('uploads/team', 'public');
-            $validated['image_path'] = $path;
-        }
+        $this->applyUpload($request, $validated, 'image_path', null, 'uploads/team', 'photo');
 
         TeamMember::create($validated);
 
@@ -144,13 +144,7 @@ class TeamMemberController extends Controller
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
-        if ($request->hasFile('image_path')) {
-            if ($team_member->image_path) {
-                Storage::disk('public')->delete($team_member->image_path);
-            }
-            $path = $request->file('image_path')->store('uploads/team', 'public');
-            $validated['image_path'] = $path;
-        }
+        $this->applyUpload($request, $validated, 'image_path', $team_member->image_path, 'uploads/team', 'photo');
 
         $team_member->update($validated);
 

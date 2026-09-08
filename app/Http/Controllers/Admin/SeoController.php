@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Concerns\HandlesImageUploads;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\PortfolioItem;
@@ -16,6 +17,8 @@ use Illuminate\Validation\Rule;
 
 class SeoController extends Controller
 {
+    use HandlesImageUploads;
+
     /** Models whose records can carry their own SEO. */
     private const SEOABLE = [
         Course::class => ['label' => 'Courses', 'title' => 'title', 'route' => 'courses.show'],
@@ -73,12 +76,11 @@ class SeoController extends Controller
         $data['is_indexable'] = $request->boolean('is_indexable');
         $data['social_profiles'] = array_values(array_filter($data['social_profiles'] ?? []));
 
-        foreach (['default_og_image', 'organization_logo'] as $field) {
-            if ($request->hasFile($field)) {
-                if ($settings->{$field}) {
-                    Storage::disk('public')->delete($settings->{$field});
-                }
-                $data[$field] = $request->file($field)->store('images/seo', 'public');
+        // A share image should stay near 1200px; a logo keeps its alpha and is
+        // encoded losslessly.
+        foreach (['default_og_image' => 'social', 'organization_logo' => 'logo'] as $field => $preset) {
+            if ($request->hasFile($field) || $request->boolean('remove_'.$field)) {
+                $data[$field] = $this->resolveUpload($request, $field, $settings->{$field}, 'images/seo', $preset);
             } else {
                 unset($data[$field]);
             }
@@ -171,14 +173,12 @@ class SeoController extends Controller
 
         $meta = SeoMeta::updateOrCreate($target, $attributes);
 
-        if ($request->hasFile('og_image')) {
-            $request->validate(['og_image' => ['image', 'max:2048']]);
+        if ($request->hasFile('og_image') || $request->boolean('remove_og_image')) {
+            $request->validate(['og_image' => ['nullable', 'image', 'max:2048']]);
 
-            if ($meta->og_image) {
-                Storage::disk('public')->delete($meta->og_image);
-            }
-
-            $meta->update(['og_image' => $request->file('og_image')->store('images/seo', 'public')]);
+            $meta->update([
+                'og_image' => $this->resolveUpload($request, 'og_image', $meta->og_image, 'images/seo', 'social'),
+            ]);
         }
 
         return response()->json(['message' => 'SEO settings saved for this page.']);

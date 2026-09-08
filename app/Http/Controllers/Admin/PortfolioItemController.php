@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Concerns\HandlesImageUploads;
 use App\Http\Controllers\Controller;
 use App\Models\PortfolioItem;
 use Illuminate\Http\Request;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\Gate;
 
 class PortfolioItemController extends Controller
 {
+    use HandlesImageUploads;
+
     /**
      * Display a listing of the resource.
      */
@@ -106,10 +109,7 @@ class PortfolioItemController extends Controller
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
-        if ($request->hasFile('image_path')) {
-            $path = $request->file('image_path')->store('uploads/portfolio', 'public');
-            $validated['image_path'] = $path;
-        }
+        $this->applyUpload($request, $validated, 'image_path', null, 'uploads/portfolio', 'featured');
 
         PortfolioItem::create($validated);
 
@@ -142,13 +142,7 @@ class PortfolioItemController extends Controller
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
-        if ($request->hasFile('image_path')) {
-            if ($portfolio->image_path) {
-                Storage::disk('public')->delete($portfolio->image_path);
-            }
-            $path = $request->file('image_path')->store('uploads/portfolio', 'public');
-            $validated['image_path'] = $path;
-        }
+        $this->applyUpload($request, $validated, 'image_path', $portfolio->image_path, 'uploads/portfolio', 'featured');
 
         $portfolio->update($validated);
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Settings;
 
+use App\Concerns\HandlesImageUploads;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -11,6 +12,8 @@ use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
 {
+    use HandlesImageUploads;
+
     public function update(Request $request): RedirectResponse
     {
         $user = $request->user();
@@ -37,35 +40,16 @@ class ProfileController extends Controller
             'phone' => $validated['phone'] ?? null,
         ]);
 
-        if ($request->hasFile('profile_photo')) {
-            $profilePhoto = $request->file('profile_photo');
+        // Both go through ImageService: optimised, converted to WebP, and given
+        // a random filename. The previous code kept the uploader's own filename,
+        // which is user-controlled input landing on disk.
+        $user->profile_photo_path = $this->resolveUpload(
+            $request, 'profile_photo', $user->profile_photo_path, 'images/profile-photos', 'photo',
+        );
 
-
-            if ($user->profile_photo_path) {
-                Storage::disk('public')->delete($user->profile_photo_path);
-            }
-            $profilePhotoPath = time() . '_' . $profilePhoto->getClientOriginalName();
-            $profilePhoto->move(storage_path('app/public/images/profile-photos'), $profilePhotoPath);
-            $user->profile_photo_path = "images/profile-photos/$profilePhotoPath";
-        } elseif (($validated['remove_profile_photo'] ?? false) && $user->profile_photo_path) {
-            Storage::disk('public')->delete($user->profile_photo_path);
-            $user->profile_photo_path = null;
-        }
-
-        if ($request->hasFile('digital_signature')) {
-            $digitalSignature = $request->file('digital_signature');
-
-            if ($user->digital_signature_path) {
-                Storage::disk('public')->delete($user->digital_signature_path);
-            }
-
-            $digitalSignaturePath = time() . '_' . $digitalSignature->getClientOriginalName();
-            $digitalSignature->move(storage_path('app/public/images/digital-signatures'), $digitalSignaturePath);
-            $user->digital_signature_path = "images/digital-signatures/$digitalSignaturePath";
-        } elseif (($validated['remove_digital_signature'] ?? false) && $user->digital_signature_path) {
-            Storage::disk('public')->delete($user->digital_signature_path);
-            $user->digital_signature_path = null;
-        }
+        $user->digital_signature_path = $this->resolveUpload(
+            $request, 'digital_signature', $user->digital_signature_path, 'images/digital-signatures', 'logo',
+        );
 
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;

@@ -5,6 +5,7 @@ namespace App\Actions\Fortify;
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
 use App\Models\User;
+use App\Services\ImageService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -40,12 +41,16 @@ class CreateNewUser implements CreatesNewUsers
         $profilePhotoPath = null;
         $digitalSignaturePath = null;
 
+        $images = app(ImageService::class);
+
         if (isset($input['profile_photo'])) {
-            $profilePhotoPath = $input['profile_photo']->store('images/profile-photos', 'public');
+            $profilePhotoPath = $images->store($input['profile_photo'], 'images/profile-photos', 'photo');
         }
 
         if (isset($input['digital_signature'])) {
-            $digitalSignaturePath = $input['digital_signature']->store('images/digital-signatures', 'public');
+            // Lossless, so a signature on white stays crisp and any
+            // transparency survives.
+            $digitalSignaturePath = $images->store($input['digital_signature'], 'images/digital-signatures', 'logo');
         }
 
         $twoFactorSecret = null;

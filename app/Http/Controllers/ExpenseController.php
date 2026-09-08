@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Concerns\HandlesImageUploads;
 use App\Models\Approval;
 use App\Models\ExpenseCategory;
 use App\Models\ExpenseEntry;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\Storage;
 
 class ExpenseController extends Controller
 {
+    use HandlesImageUploads;
+
     public function index()
     {
         $entries = ExpenseEntry::with('category')->orderByDesc('date')->paginate(20);
@@ -55,9 +58,8 @@ class ExpenseController extends Controller
             'description' => ['nullable', 'string'],
         ]);
 
-        if ($request->hasFile('attachment')) {
-            $data['attachment_path'] = $request->file('attachment')->store('uploads/expense', 'public');
-        }
+        // A photographed invoice is optimised; a PDF is stored as uploaded.
+        $this->applyUpload($request, $data, 'attachment', null, 'uploads/expense', 'document', column: 'attachment_path');
 
         $data['status'] = ExpenseEntry::STATUS_PENDING;
         $data['created_by'] = $request->user()->id;
@@ -106,10 +108,7 @@ class ExpenseController extends Controller
             'description' => ['nullable', 'string'],
         ]);
 
-        if ($request->hasFile('attachment')) {
-            Storage::disk('public')->delete($expense->attachment_path);
-            $data['attachment_path'] = $request->file('attachment')->store('uploads/expense', 'public');
-        }
+        $this->applyUpload($request, $data, 'attachment', $expense->attachment_path, 'uploads/expense', 'document', column: 'attachment_path');
 
         $expense->update($data);
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Concerns\HandlesImageUploads;
 use App\Http\Controllers\Controller;
 use App\Models\Service;
 use App\Models\ServiceCategory;
@@ -12,6 +13,8 @@ use Illuminate\Support\Facades\Gate;
 
 class ServiceController extends Controller
 {
+    use HandlesImageUploads;
+
     /**
      * Display a listing of the resource.
      */
@@ -112,10 +115,7 @@ class ServiceController extends Controller
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
-        if ($request->hasFile('featured_image')) {
-            $path = $request->file('featured_image')->store('uploads/services', 'public');
-            $validated['featured_image'] = $path;
-        }
+        $this->applyUpload($request, $validated, 'featured_image', null, 'uploads/services', 'featured');
 
         Service::create($validated);
 
@@ -150,13 +150,7 @@ class ServiceController extends Controller
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
-        if ($request->hasFile('featured_image')) {
-            if ($service->featured_image) {
-                Storage::disk('public')->delete($service->featured_image);
-            }
-            $path = $request->file('featured_image')->store('uploads/services', 'public');
-            $validated['featured_image'] = $path;
-        }
+        $this->applyUpload($request, $validated, 'featured_image', $service->featured_image, 'uploads/services', 'featured');
 
         $service->update($validated);
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Concerns\HandlesImageUploads;
 use App\Models\FieldDefinition;
 use App\Models\Project;
 use App\Models\Trainee;
@@ -15,6 +16,8 @@ use Illuminate\Validation\Rule;
 
 class TraineeController extends Controller implements HasMiddleware
 {
+    use HandlesImageUploads;
+
     /**
      * Student records carry NID, date of birth and next-of-kin details, so
      * even reading the list needs an explicit permission.
@@ -109,9 +112,7 @@ class TraineeController extends Controller implements HasMiddleware
         $data = $this->validatedData($request);
         $data['created_by'] = $request->user()?->id;
 
-        if ($request->hasFile('photo')) {
-            $data['photo_path'] = $request->file('photo')->store('uploads/trainees', 'public');
-        }
+        $this->applyUpload($request, $data, 'photo', null, 'uploads/trainees', 'photo', column: 'photo_path');
 
         $trainee = Trainee::create($data);
 
@@ -131,10 +132,7 @@ class TraineeController extends Controller implements HasMiddleware
     {
         $data = $this->validatedData($request, $trainee);
 
-        if ($request->hasFile('photo')) {
-            Storage::disk('public')->delete($trainee->photo_path);
-            $data['photo_path'] = $request->file('photo')->store('uploads/trainees', 'public');
-        }
+        $this->applyUpload($request, $data, 'photo', $trainee->photo_path, 'uploads/trainees', 'photo', column: 'photo_path');
 
         $trainee->update($data);
 
