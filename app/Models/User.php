@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Exceptions\ProtectedUserException;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -40,7 +41,59 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'two_factor_confirmed_at' => 'datetime',
             'password' => 'hashed',
+            'is_protected' => 'boolean',
         ];
+    }
+
+    /**
+     * Guards that keep at least one superadmin alive.
+     *
+     * These sit on the model rather than in a controller on purpose: the Users
+     * screen does not exist yet, and whatever is built later inherits the rule
+     * for free. Seeders and the console are covered too.
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (self $user): void {
+            if ($user->is_protected) {
+                throw ProtectedUserException::cannotDelete($user->name);
+            }
+
+            if ($user->isSuperAdmin() && static::superadminCount() <= 1) {
+                throw ProtectedUserException::lastSuperadmin('Deleting');
+            }
+        });
+
+        static::updating(function (self $user): void {
+            if (! $user->isDirty('role')) {
+                return;
+            }
+
+            $wasSuperadmin = $user->getOriginal('role') === self::ROLE_SUPERADMIN;
+
+            if (! $wasSuperadmin) {
+                return;
+            }
+
+            if ($user->is_protected) {
+                throw ProtectedUserException::cannotDemote($user->name);
+            }
+
+            if (static::superadminCount() <= 1) {
+                throw ProtectedUserException::lastSuperadmin('Demoting');
+            }
+        });
+    }
+
+    public static function superadminCount(): int
+    {
+        return static::query()->where('role', self::ROLE_SUPERADMIN)->count();
+    }
+
+    /** True when this account may not be deleted or demoted. */
+    public function isProtected(): bool
+    {
+        return (bool) $this->is_protected;
     }
 
     /**

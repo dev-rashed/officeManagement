@@ -13,13 +13,22 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // The protected superadmin runs first, so there is always a way in
+        // even if the seeders below fail.
+        $this->call(SuperAdminSeeder::class);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'role' => User::ROLE_ADMIN,
-        ]);
+        if (app()->environment('local', 'testing')) {
+            User::firstOrCreate(
+                ['email' => 'test@example.com'],
+                [
+                    'name' => 'Test User',
+                    'password' => bcrypt('password'),
+                    'role' => User::ROLE_ADMIN,
+                    'two_factor_type' => User::TWO_FACTOR_TYPE_EMAIL,
+                    'email_verified_at' => now(),
+                ],
+            );
+        }
 
         $this->call(WebsiteContentSeeder::class);
     }

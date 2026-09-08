@@ -37,7 +37,12 @@ class RoleController extends Controller implements HasMiddleware
 
         $permissions = Permission::query()->ordered()->get()->groupBy('group');
 
-        return view('pages.admin.roles.index', compact('roles', 'permissions'));
+        // Shown so it is obvious which accounts are the safety net.
+        $protectedUsers = \App\Models\User::query()
+            ->where('is_protected', true)
+            ->get(['id', 'name', 'email', 'role']);
+
+        return view('pages.admin.roles.index', compact('roles', 'permissions', 'protectedUsers'));
     }
 
     /**

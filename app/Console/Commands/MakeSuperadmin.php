@@ -21,7 +21,8 @@ class MakeSuperadmin extends Command
                             {email? : The account to promote, or create}
                             {--create : Create the account if it does not exist}
                             {--name= : Name to use when creating}
-                            {--password= : Password to use when creating (you will be prompted otherwise)}';
+                            {--password= : Password to use when creating (you will be prompted otherwise)}
+                            {--protect : Mark the account so it can never be deleted or demoted}';
 
     protected $description = 'Promote a user to superadmin, or create one';
 
@@ -53,9 +54,18 @@ class MakeSuperadmin extends Command
             $previous = $user->role ?: 'none';
             $user->role = User::ROLE_SUPERADMIN;
             $user->email_verified_at ??= now();
+
+            if ($this->option('protect')) {
+                $user->is_protected = true;
+            }
+
             $user->save();
 
             $this->info("Promoted {$user->name} <{$user->email}> from '{$previous}' to superadmin.");
+        }
+
+        if ($user->isProtected()) {
+            $this->line('  This account is protected: it cannot be deleted or moved off superadmin.');
         }
 
         Role::flushCache();
@@ -92,7 +102,7 @@ class MakeSuperadmin extends Command
             return null;
         }
 
-        $user = User::create([
+        $user = new User([
             'name' => $name,
             'email' => $email,
             'password' => Hash::make($password),
@@ -100,6 +110,8 @@ class MakeSuperadmin extends Command
             'two_factor_type' => User::TWO_FACTOR_TYPE_EMAIL,
         ]);
 
+        // is_protected is not fillable, so it is set directly.
+        $user->is_protected = (bool) $this->option('protect');
         $user->email_verified_at = now();
         $user->save();
 

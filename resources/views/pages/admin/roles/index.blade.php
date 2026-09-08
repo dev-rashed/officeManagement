@@ -132,8 +132,29 @@
             </ul>
         </section>
 
+        @if ($protectedUsers->isNotEmpty())
+            <section class="rp-card">
+                <header class="rp-card-head"><h2>{{ __('Protected accounts') }}</h2></header>
+                <p class="mb-3 text-xs text-slate-500 dark:text-zinc-400">
+                    {{ __('These cannot be deleted or moved off superadmin, by anyone, from anywhere in the application. They are the way back in if something goes wrong.') }}
+                </p>
+                <ul class="rp-roles">
+                    @foreach ($protectedUsers as $user)
+                        <li class="rp-role-row">
+                            <span class="rp-badge is-super">{{ __('protected') }}</span>
+                            <div class="min-w-0 flex-1">
+                                <span class="rp-role-name">{{ $user->name }}</span>
+                                <p class="rp-role-desc">{{ $user->email }}</p>
+                            </div>
+                            <code class="rp-slug">{{ $user->role }}</code>
+                        </li>
+                    @endforeach
+                </ul>
+            </section>
+        @endif
+
         <p class="text-xs text-slate-400">
-            {{ __('Assigning a role to a person needs the Users screen, which is not built yet — roles are currently set when a user is seeded.') }}
+            {{ __('Assigning a role to a person needs the Users screen, which is not built yet — roles are currently set by seeding or the user:superadmin command.') }}
         </p>
     </div>
 
