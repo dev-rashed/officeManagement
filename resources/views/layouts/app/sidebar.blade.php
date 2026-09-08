@@ -63,7 +63,7 @@
                     </flux:navlist.group>
                     <flux:navlist.group
                         expandable
-                        :expanded="request()->routeIs('admin.page-sections.*', 'admin.team-members.*', 'admin.portfolio.*', 'admin.contact-settings.*')"
+                        :expanded="request()->routeIs('admin.page-sections.*', 'admin.team-members.*', 'admin.portfolio.*', 'admin.contact-settings.*', 'admin.seo.*', 'admin.analytics.*')"
                         :heading="__('Website CMS')"
                     >
                         <flux:sidebar.item :href="route('admin.page-sections.index')" :current="request()->routeIs('admin.page-sections.*')" wire:navigate>
@@ -77,6 +77,15 @@
                         </flux:sidebar.item>
                         <flux:sidebar.item :href="route('admin.contact-settings.edit')" :current="request()->routeIs('admin.contact-settings.*')" wire:navigate>
                             {{ __('Contact Settings') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item :href="route('admin.analytics.index')" :current="request()->routeIs('admin.analytics.*')" wire:navigate>
+                            {{ __('Website Analytics') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item :href="route('admin.seo.settings')" :current="request()->routeIs('admin.seo.settings')" wire:navigate>
+                            {{ __('SEO & Analytics') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item :href="route('admin.seo.pages')" :current="request()->routeIs('admin.seo.pages')" wire:navigate>
+                            {{ __('Per-page SEO') }}
                         </flux:sidebar.item>
                     </flux:navlist.group>
                     <flux:navlist.group
@@ -103,6 +112,11 @@
                             {{ __('Categories') }}
                         </flux:sidebar.item>
                     </flux:navlist.group>
+                    @can('settings.manage')
+                        <flux:sidebar.item icon="bell" :href="route('admin.notification-rules.index')" :current="request()->routeIs('admin.notification-rules.*')" wire:navigate>
+                            {{ __('Notification Rules') }}
+                        </flux:sidebar.item>
+                    @endcan
                     @can('assets.manage')
                         <flux:sidebar.item icon="archive-box" :href="route('assets.index')" :current="request()->routeIs('assets.*')" wire:navigate>
                             {{ __('Asset Management') }}
@@ -122,6 +136,11 @@
                     {{ __('Documentation') }}
                 </flux:sidebar.item>
             </flux:sidebar.nav>
+
+            <div class="hidden items-center justify-between gap-2 px-2 pb-1 lg:flex">
+                <a href="{{ route('notifications.index') }}" class="text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">{{ __('Notifications') }}</a>
+                @include('partials.notification-bell')
+            </div>
 
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>

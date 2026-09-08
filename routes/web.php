@@ -5,6 +5,7 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\Finance\ExpenseCategoryController;
 use App\Http\Controllers\Finance\IncomeCategoryController;
 use App\Http\Controllers\IncomeController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\Projects\FieldDefinitionController;
@@ -15,6 +16,13 @@ require __DIR__.'/public.php';
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
+    // Notifications
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('notifications/recent', [NotificationController::class, 'recent'])->name('notifications.recent');
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+    Route::post('notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::delete('notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+
     Route::get('activity-log', [ActivityLogController::class, 'index'])->name('activity.log');
     Route::get('activity-log/data', [ActivityLogController::class, 'data'])->name('activity.log.data');
 
@@ -104,6 +112,15 @@ Route::middleware(['auth', 'verified'])->prefix('admin/cms')->name('admin.')->gr
     Route::resource('portfolio', \App\Http\Controllers\Admin\PortfolioItemController::class)->except(['show']);
     Route::get('contact-settings', [\App\Http\Controllers\Admin\ContactSettingController::class, 'edit'])->name('contact-settings.edit');
     Route::put('contact-settings', [\App\Http\Controllers\Admin\ContactSettingController::class, 'update'])->name('contact-settings.update');
+
+    // Website traffic, recorded in this app
+    Route::get('analytics', [\App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('analytics.index');
+
+    // SEO and Google analytics tooling
+    Route::get('seo', [\App\Http\Controllers\Admin\SeoController::class, 'settings'])->name('seo.settings');
+    Route::post('seo', [\App\Http\Controllers\Admin\SeoController::class, 'updateSettings'])->name('seo.settings.update');
+    Route::get('seo/pages', [\App\Http\Controllers\Admin\SeoController::class, 'pages'])->name('seo.pages');
+    Route::post('seo/pages', [\App\Http\Controllers\Admin\SeoController::class, 'updatePage'])->name('seo.pages.update');
 });
 
 // Asset Management Routes
@@ -126,4 +143,13 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::resource('services', \App\Http\Controllers\Admin\ServiceController::class)->except(['show']);
     Route::get('service-categories/data', [\App\Http\Controllers\Admin\ServiceCategoryController::class, 'data'])->name('service-categories.data');
     Route::resource('service-categories', \App\Http\Controllers\Admin\ServiceCategoryController::class)->except(['show']);
+});
+
+// Notification rules — who gets told about what
+Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('notification-rules', [\App\Http\Controllers\Admin\NotificationRuleController::class, 'index'])->name('notification-rules.index');
+    Route::post('notification-rules', [\App\Http\Controllers\Admin\NotificationRuleController::class, 'store'])->name('notification-rules.store');
+    Route::put('notification-rules/{rule}', [\App\Http\Controllers\Admin\NotificationRuleController::class, 'update'])->name('notification-rules.update');
+    Route::post('notification-rules/{rule}/toggle', [\App\Http\Controllers\Admin\NotificationRuleController::class, 'toggle'])->name('notification-rules.toggle');
+    Route::delete('notification-rules/{rule}', [\App\Http\Controllers\Admin\NotificationRuleController::class, 'destroy'])->name('notification-rules.destroy');
 });

@@ -4,10 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#1E3A5F">
-    <meta name="description" content="@yield('description', 'HashTag Research & Technology Ltd. delivers software development, web applications, AI solutions, digital marketing, and IT consulting.')">
-    <meta name="author" content="HashTag Research & Technology Ltd.">
 
-    <title>@yield('title', 'HashTag Research & Technology Ltd.')</title>
+    @php
+        // The page's own @section values are the fallback, so titles written in
+        // Blade keep working until someone overrides them from the CMS.
+        //
+        // yieldContent hands back rendered HTML, so entities are already
+        // encoded. They have to be decoded here or {{ }} escapes them a second
+        // time -- and an "&amp;" title would never match the raw site name,
+        // which would append the site name to a title that already ends in it.
+        $seoFallback = fn (string $section): ?string => trim(html_entity_decode(
+            $__env->yieldContent($section),
+            ENT_QUOTES | ENT_HTML5,
+        )) ?: null;
+
+        $seo = app(\App\Services\SeoService::class)->resolve(
+            \App\Services\SeoService::pageKeyForRoute(request()->route()?->getName()),
+            $seoModel ?? null,
+            [
+                'title' => $seoFallback('title'),
+                'description' => $seoFallback('description'),
+            ],
+        );
+    @endphp
+
+    <meta name="author" content="{{ $seo['settings']->site_name }}">
+
+    @include('partials.seo-head', ['seo' => $seo])
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,6 +38,14 @@
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
 </head>
 <body>
+    {{-- GTM needs a noscript iframe immediately after <body> to work at all --}}
+    @unless ($seo['noindex'])
+        @if ($seo['settings']->google_tag_manager_id)
+            <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ $seo['settings']->google_tag_manager_id }}"
+                height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+        @endif
+    @endunless
+
     @php
         $navClass = fn (array|string $routes): string => request()->routeIs(...(array) $routes) ? 'is-active' : '';
     @endphp
@@ -100,5 +131,9 @@
 
     <script src="{{ asset('js/script.js') }}"></script>
     @yield('scripts')
+
+    @if ($seo['settings']->custom_body_snippet)
+        {!! $seo['settings']->custom_body_snippet !!}
+    @endif
 </body>
 </html>

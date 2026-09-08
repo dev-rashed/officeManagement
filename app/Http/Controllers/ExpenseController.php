@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Approval;
 use App\Models\ExpenseCategory;
 use App\Models\ExpenseEntry;
+use App\Services\NotificationDispatcher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -61,7 +62,12 @@ class ExpenseController extends Controller
         $data['status'] = ExpenseEntry::STATUS_PENDING;
         $data['created_by'] = $request->user()->id;
 
-        ExpenseEntry::create($data);
+        $expense = ExpenseEntry::create($data);
+
+        app(NotificationDispatcher::class)->dispatch(
+            'expense.created',
+            $expense->load(['category', 'creator']),
+        );
 
         return redirect()->route('expense.index')->with('success', 'Expense entry created successfully.');
     }

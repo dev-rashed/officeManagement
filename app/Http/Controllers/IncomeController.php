@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\IncomeEntry;
+use App\Services\NotificationDispatcher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -108,7 +109,12 @@ class IncomeController extends Controller
         $data['status']     = IncomeEntry::STATUS_PENDING;
         $data['created_by'] = $request->user()->id;
 
-        IncomeEntry::create($data);
+        $income = IncomeEntry::create($data);
+
+        app(NotificationDispatcher::class)->dispatch(
+            'income.created',
+            $income->load('creator'),
+        );
 
         notify('Income entry created successfully.', 'Created', 'success');
 

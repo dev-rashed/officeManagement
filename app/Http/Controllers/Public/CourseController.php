@@ -16,6 +16,10 @@ class CourseController extends Controller
     public function show($slug)
     {
         $course = Course::where('slug', $slug)->published()->firstOrFail();
-        return view('pages.public.course-detail', compact('course'));
+
+        // Lets TrackPageView attribute the view to this course.
+        request()->attributes->set('trackable', $course);
+
+        return view('pages.public.course-detail', ['course' => $course, 'seoModel' => $course]);
     }
 }

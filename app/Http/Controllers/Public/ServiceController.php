@@ -16,6 +16,10 @@ class ServiceController extends Controller
     public function show($slug)
     {
         $service = Service::where('slug', $slug)->published()->firstOrFail();
-        return view('pages.public.services.detail', compact('service'));
+
+        // Lets TrackPageView attribute the view to this service.
+        request()->attributes->set('trackable', $service);
+
+        return view('pages.public.services.detail', ['service' => $service, 'seoModel' => $service]);
     }
 }
