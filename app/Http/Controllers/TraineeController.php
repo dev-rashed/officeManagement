@@ -7,12 +7,25 @@ use App\Models\Project;
 use App\Models\Trainee;
 use App\Services\CustomFieldService;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
-class TraineeController extends Controller
+class TraineeController extends Controller implements HasMiddleware
 {
+    /**
+     * Student records carry NID, date of birth and next-of-kin details, so
+     * even reading the list needs an explicit permission.
+     */
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('can:students.manage'),
+        ];
+    }
+
     public function index()
     {
         $totalTrainees = Trainee::count();

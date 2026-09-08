@@ -14,7 +14,9 @@ use Illuminate\Support\Facades\Route;
 
 require __DIR__.'/public.php';
 
-Route::middleware(['auth', 'verified'])->group(function () {
+// 'throttle:admin-write' is the backstop behind CSRF and the permission gates:
+// a stolen session still cannot hammer the write endpoints.
+Route::middleware(['auth', 'verified', 'throttle:admin-write'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
     // Notifications
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -103,7 +105,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 require __DIR__.'/settings.php';
 
 // CMS Routes
-Route::middleware(['auth', 'verified'])->prefix('admin/cms')->name('admin.')->group(function () {
+Route::middleware(['auth', 'verified', 'throttle:admin-write'])->prefix('admin/cms')->name('admin.')->group(function () {
     Route::get('page-sections/data', [\App\Http\Controllers\Admin\PageSectionController::class, 'data'])->name('page-sections.data');
     Route::resource('page-sections', \App\Http\Controllers\Admin\PageSectionController::class)->except(['show']);
     Route::get('team-members/data', [\App\Http\Controllers\Admin\TeamMemberController::class, 'data'])->name('team-members.data');
@@ -124,13 +126,13 @@ Route::middleware(['auth', 'verified'])->prefix('admin/cms')->name('admin.')->gr
 });
 
 // Asset Management Routes
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'throttle:admin-write'])->group(function () {
     Route::get('assets/data', [\App\Http\Controllers\AssetController::class, 'data'])->name('assets.data');
     Route::resource('assets', \App\Http\Controllers\AssetController::class);
 });
 
 // Course Management Routes
-Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'verified', 'throttle:admin-write'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('courses/data', [\App\Http\Controllers\Admin\CourseController::class, 'data'])->name('courses.data');
     Route::resource('courses', \App\Http\Controllers\Admin\CourseController::class)->except(['show']);
     Route::get('course-categories/data', [\App\Http\Controllers\Admin\CourseCategoryController::class, 'data'])->name('course-categories.data');
@@ -138,7 +140,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 });
 
 // Service Management Routes
-Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'verified', 'throttle:admin-write'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('services/data', [\App\Http\Controllers\Admin\ServiceController::class, 'data'])->name('services.data');
     Route::resource('services', \App\Http\Controllers\Admin\ServiceController::class)->except(['show']);
     Route::get('service-categories/data', [\App\Http\Controllers\Admin\ServiceCategoryController::class, 'data'])->name('service-categories.data');
@@ -146,10 +148,19 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 });
 
 // Notification rules — who gets told about what
-Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'verified', 'throttle:admin-write'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('notification-rules', [\App\Http\Controllers\Admin\NotificationRuleController::class, 'index'])->name('notification-rules.index');
     Route::post('notification-rules', [\App\Http\Controllers\Admin\NotificationRuleController::class, 'store'])->name('notification-rules.store');
     Route::put('notification-rules/{rule}', [\App\Http\Controllers\Admin\NotificationRuleController::class, 'update'])->name('notification-rules.update');
     Route::post('notification-rules/{rule}/toggle', [\App\Http\Controllers\Admin\NotificationRuleController::class, 'toggle'])->name('notification-rules.toggle');
     Route::delete('notification-rules/{rule}', [\App\Http\Controllers\Admin\NotificationRuleController::class, 'destroy'])->name('notification-rules.destroy');
+});
+
+// Roles & permissions — superadmin only, enforced by the roles.manage gate
+Route::middleware(['auth', 'verified', 'throttle:admin-write'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('roles', [\App\Http\Controllers\Admin\RoleController::class, 'index'])->name('roles.index');
+    Route::post('roles', [\App\Http\Controllers\Admin\RoleController::class, 'store'])->name('roles.store');
+    Route::put('roles/{role}', [\App\Http\Controllers\Admin\RoleController::class, 'update'])->name('roles.update');
+    Route::put('roles/{role}/permissions', [\App\Http\Controllers\Admin\RoleController::class, 'updatePermissions'])->name('roles.permissions');
+    Route::delete('roles/{role}', [\App\Http\Controllers\Admin\RoleController::class, 'destroy'])->name('roles.destroy');
 });

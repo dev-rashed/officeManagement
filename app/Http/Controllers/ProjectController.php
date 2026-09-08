@@ -5,9 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Models\ProjectCategory;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class ProjectController extends Controller
+class ProjectController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('can:projects.view', only: ['index', 'data']),
+            new Middleware('can:projects.manage', only: ['store', 'update', 'destroy']),
+        ];
+    }
+
     public function index()
     {
         $totalProjects = Project::count();

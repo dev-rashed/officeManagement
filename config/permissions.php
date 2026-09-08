@@ -15,6 +15,10 @@ return [
             'settings.manage',
             'cms.manage',
             'assets.manage',
+            'projects.view',
+            'projects.manage',
+            'students.manage',
+            'activity.view',
         ],
 
         User::ROLE_ACCOUNTANT => [
@@ -24,21 +28,27 @@ return [
             'approvals.manage',
             'cms.manage',
             'assets.manage',
+            'projects.view',
+            'projects.manage',
+            'students.manage',
         ],
 
         User::ROLE_CHAIRMAN => [
             'finance.view',
             'approvals.manage',
+            'projects.view',
         ],
 
         User::ROLE_MANAGING_DIRECTOR => [
             'finance.view',
             'approvals.manage',
+            'projects.view',
         ],
 
         User::ROLE_DIRECTOR => [
             'finance.view',
             'approvals.manage',
+            'projects.view',
         ],
     ],
 ];

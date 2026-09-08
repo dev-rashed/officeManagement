@@ -6,12 +6,15 @@ use App\Auth\TwoFactorAuthenticationProvider as CustomTwoFactorAuthenticationPro
 use App\Models\User;
 use App\Notifications\EmailTwoFactorCode;
 use Carbon\CarbonImmutable;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Fortify\Contracts\TwoFactorAuthenticationProvider as TwoFactorAuthenticationProviderContract;
@@ -36,6 +39,7 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
         $this->registerTwoFactorListeners();
         $this->registerPermissions();
+        $this->registerRateLimiters();
     }
 
     /**
@@ -53,6 +57,40 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('settings.manage', fn (User $user): bool => $user->hasPermission('settings.manage'));
         Gate::define('cms.manage', fn (User $user): bool => $user->hasPermission('cms.manage'));
         Gate::define('assets.manage', fn (User $user): bool => $user->hasPermission('assets.manage'));
+        Gate::define('projects.view', fn (User $user): bool => $user->hasPermission('projects.view'));
+        Gate::define('projects.manage', fn (User $user): bool => $user->hasPermission('projects.manage'));
+        Gate::define('students.manage', fn (User $user): bool => $user->hasPermission('students.manage'));
+        Gate::define('activity.view', fn (User $user): bool => $user->hasPermission('activity.view'));
+
+        /*
+         * Roles and permissions are superadmin-only, and deliberately NOT a
+         * grantable permission. If it were one, an admin holding
+         * `settings.manage` could grant it to themselves and then grant
+         * themselves everything else -- the screen would protect nothing.
+         *
+         * This checks the role directly, so it cannot be handed out from
+         * inside the very screen it guards.
+         */
+        Gate::define('roles.manage', fn (User $user): bool => $user->isSuperAdmin());
+    }
+
+    /**
+     * Rate limits for authenticated write traffic.
+     *
+     * The admin forms are behind CSRF and the permission gates, which stop an
+     * outsider. This is the backstop for a compromised or misused session: a
+     * stolen cookie cannot be used to hammer the write endpoints, and a runaway
+     * script cannot fill the database.
+     */
+    protected function registerRateLimiters(): void
+    {
+        RateLimiter::for('admin-write', function (Request $request) {
+            return Limit::perMinute(90)
+                ->by($request->user()?->id ?: $request->ip())
+                ->response(fn () => response()->json([
+                    'message' => 'Too many requests. Please slow down and try again in a moment.',
+                ], 429));
+        });
     }
 
     /**

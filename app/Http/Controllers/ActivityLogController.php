@@ -4,9 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class ActivityLogController extends Controller
+class ActivityLogController extends Controller implements HasMiddleware
 {
+    /**
+     * The audit trail shows what every other member of staff has been doing,
+     * so it is deliberately admin-only.
+     */
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('can:activity.view'),
+        ];
+    }
+
     public function index(Request $request)
     {
         $totalLogs = ActivityLog::count();

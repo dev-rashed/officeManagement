@@ -43,7 +43,30 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Every role slug that currently exists.
+     *
+     * Read from the roles table so a role added in the admin is immediately
+     * valid everywhere. Falls back to the built-in constants if the table is
+     * not there yet -- during a fresh install, before the migration runs.
+     */
     public static function roles(): array
+    {
+        try {
+            $slugs = Role::slugs();
+
+            if ($slugs !== []) {
+                return $slugs;
+            }
+        } catch (\Throwable) {
+            // Table missing or database unavailable; use the constants below.
+        }
+
+        return self::builtInRoles();
+    }
+
+    /** @return array<int, string> */
+    public static function builtInRoles(): array
     {
         return [
             self::ROLE_SUPERADMIN,
@@ -53,6 +76,11 @@ class User extends Authenticatable
             self::ROLE_MANAGING_DIRECTOR,
             self::ROLE_DIRECTOR,
         ];
+    }
+
+    public function roleModel(): ?Role
+    {
+        return $this->role ? Role::where('name', $this->role)->first() : null;
     }
 
     public static function twoFactorTypes(): array
@@ -98,13 +126,26 @@ class User extends Authenticatable
         return $this->hasRole(self::ROLE_DIRECTOR);
     }
 
+    /**
+     * The permissions this user's role grants.
+     *
+     * Sourced from the roles table (cached), so a change made on the Roles &
+     * Permissions screen takes effect on the next request without a deploy.
+     * config/permissions.php remains only as the seed for that table.
+     */
     public function permissions(): array
     {
         if (! $this->role) {
             return [];
         }
 
-        return config('permissions.roles.' . $this->role, []);
+        try {
+            return Role::permissionsFor($this->role);
+        } catch (\Throwable) {
+            // Database unreachable or the table not migrated yet -- fall back
+            // to the shipped defaults rather than locking everyone out.
+            return config('permissions.roles.'.$this->role, []);
+        }
     }
 
     public function hasPermission(string $permission): bool

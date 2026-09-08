@@ -15,9 +15,11 @@
                     <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
-                    <flux:sidebar.item icon="clock" :href="route('activity.log')" :current="request()->routeIs('activity.log')" wire:navigate>
-                        {{ __('Activity Log') }}
-                    </flux:sidebar.item>
+                    @can('activity.view')
+                        <flux:sidebar.item icon="clock" :href="route('activity.log')" :current="request()->routeIs('activity.log')" wire:navigate>
+                            {{ __('Activity Log') }}
+                        </flux:sidebar.item>
+                    @endcan
                     <flux:navlist.group
                         expandable
                         :expanded="request()->routeIs('income.*')"
@@ -51,15 +53,19 @@
                         :expanded="request()->routeIs('projects.*')"
                         :heading="__('Project Management')"
                     >
-                        <flux:sidebar.item :href="route('projects.index')" :current="request()->routeIs('projects.index')" wire:navigate>
-                            {{ __('Projects') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item :href="route('projects.categories.index')" :current="request()->routeIs('projects.categories.*')" wire:navigate>
-                            {{ __('Categories') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item :href="route('projects.trainees.index')" :current="request()->routeIs('projects.trainees.*')" wire:navigate>
-                            {{ __('Trainee') }}
-                        </flux:sidebar.item>
+                        @can('projects.view')
+                            <flux:sidebar.item :href="route('projects.index')" :current="request()->routeIs('projects.index')" wire:navigate>
+                                {{ __('Projects') }}
+                            </flux:sidebar.item>
+                            <flux:sidebar.item :href="route('projects.categories.index')" :current="request()->routeIs('projects.categories.*')" wire:navigate>
+                                {{ __('Categories') }}
+                            </flux:sidebar.item>
+                        @endcan
+                        @can('students.manage')
+                            <flux:sidebar.item :href="route('projects.trainees.index')" :current="request()->routeIs('projects.trainees.*')" wire:navigate>
+                                {{ __('Trainee') }}
+                            </flux:sidebar.item>
+                        @endcan
                     </flux:navlist.group>
                     <flux:navlist.group
                         expandable
@@ -115,6 +121,11 @@
                     @can('settings.manage')
                         <flux:sidebar.item icon="bell" :href="route('admin.notification-rules.index')" :current="request()->routeIs('admin.notification-rules.*')" wire:navigate>
                             {{ __('Notification Rules') }}
+                        </flux:sidebar.item>
+                    @endcan
+                    @can('roles.manage')
+                        <flux:sidebar.item icon="shield-check" :href="route('admin.roles.index')" :current="request()->routeIs('admin.roles.*')" wire:navigate>
+                            {{ __('Roles & Permissions') }}
                         </flux:sidebar.item>
                     @endcan
                     @can('assets.manage')

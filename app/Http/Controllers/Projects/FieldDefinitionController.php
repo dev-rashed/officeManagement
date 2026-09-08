@@ -7,11 +7,20 @@ use App\Models\FieldDefinition;
 use App\Models\FieldValue;
 use App\Models\Project;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
-class FieldDefinitionController extends Controller
+class FieldDefinitionController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('can:projects.manage'),
+        ];
+    }
+
     /**
      * The registration form builder for one project.
      */
