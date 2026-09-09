@@ -19,6 +19,76 @@
 
         @include('partials.approval-outcome-banner', ['entry' => $expense])
 
+        {{-- Who paid, and whether the office has settled up --}}
+        @if ($expense->isPersonal())
+            <div class="rb-panel {{ $expense->isReimbursed() ? 'is-done' : 'is-owed' }}">
+                <div class="rb-main">
+                    <p class="rb-title">
+                        @if ($expense->isReimbursed())
+                            {{ __('Reimbursed to :name', ['name' => $expense->payer?->name ?? __('the payer')]) }}
+                        @else
+                            {{ __('Owed to :name', ['name' => $expense->payer?->name ?? __('the payer')]) }}
+                        @endif
+                    </p>
+                    <p class="rb-note">
+                        @if ($expense->isReimbursed())
+                            {{ __('Paid back on :date', ['date' => $expense->reimbursed_at?->format('d M Y')]) }}
+                            @if ($expense->reimburser) · {{ __('recorded by :who', ['who' => $expense->reimburser->name]) }} @endif
+                        @else
+                            {{ __('Paid from their own pocket. The office has not paid this back yet.') }}
+                        @endif
+                    </p>
+                    @if ($expense->reimbursement_note)
+                        <p class="rb-note">{{ $expense->reimbursement_note }}</p>
+                    @endif
+                </div>
+
+                <span class="rb-amount">৳ {{ number_format((float) $expense->amount, 2) }}</span>
+
+                @can('finance.reimburse')
+                    <form method="POST" action="{{ route('expense.reimburse', $expense) }}" class="rb-form">
+                        @csrf
+                        @if ($expense->isReimbursed())
+                            <input type="hidden" name="action" value="mark_unpaid">
+                            <button type="submit" class="rb-btn is-undo">{{ __('Mark as not paid') }}</button>
+                        @else
+                            <input type="hidden" name="action" value="mark_paid">
+                            <input type="text" name="reimbursement_note" class="rb-input" placeholder="{{ __('Reference (optional)') }}" maxlength="255">
+                            <button type="submit" class="rb-btn is-pay"
+                                @disabled($expense->status !== \App\Models\ExpenseEntry::STATUS_FULLY_APPROVED)
+                                title="{{ $expense->status !== \App\Models\ExpenseEntry::STATUS_FULLY_APPROVED ? __('Only fully approved expenses can be reimbursed') : '' }}">
+                                {{ __('Mark as reimbursed') }}
+                            </button>
+                        @endif
+                    </form>
+                @endcan
+            </div>
+
+            <style>
+                .rb-panel { align-items:center; border:1px solid; border-radius:14px; display:flex; flex-wrap:wrap; gap:1rem; padding:.9rem 1.1rem; }
+                .rb-panel.is-owed { background:#fffbeb; border-color:#fde68a; }
+                .rb-panel.is-done { background:#ecfdf5; border-color:#a7f3d0; }
+                .rb-main { flex:1 1 16rem; min-width:0; }
+                .rb-title { font-size:.88rem; font-weight:700; }
+                .rb-panel.is-owed .rb-title { color:#92400e; }
+                .rb-panel.is-done .rb-title { color:#065f46; }
+                .rb-note { font-size:.76rem; margin-top:.2rem; }
+                .rb-panel.is-owed .rb-note { color:#a16207; }
+                .rb-panel.is-done .rb-note { color:#047857; }
+                .rb-amount { font-size:1.15rem; font-weight:700; font-variant-numeric:tabular-nums; }
+                .rb-panel.is-owed .rb-amount { color:#92400e; }
+                .rb-panel.is-done .rb-amount { color:#065f46; }
+                .rb-form { align-items:center; display:flex; gap:.4rem; }
+                .rb-input { background:#fff; border:1px solid #e2e8f0; border-radius:8px; font-size:.75rem; padding:.4rem .55rem; width:11rem; }
+                .rb-btn { border:1px solid transparent; border-radius:8px; font-size:.75rem; font-weight:600; padding:.45rem .8rem; }
+                .rb-btn.is-pay { background:#059669; color:#fff; }
+                .rb-btn.is-pay:hover:not(:disabled) { background:#047857; }
+                .rb-btn.is-pay:disabled { cursor:not-allowed; opacity:.5; }
+                .rb-btn.is-undo { background:#fff; border-color:#d1d5db; color:#4b5563; }
+                .rb-btn.is-undo:hover { background:#f9fafb; }
+            </style>
+        @endif
+
         <div class="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
             <div class="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
                 <h2 class="text-lg font-semibold">{{ __('Expense Information') }}</h2>

@@ -86,10 +86,10 @@
         <div class="flex flex-wrap items-center justify-between gap-3">
             <p id="rp-status" class="text-xs text-slate-400">{{ __('No unsaved changes.') }}</p>
             <div class="flex gap-2">
-                <button type="button" id="rp-reset" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:border-zinc-700 dark:bg-transparent dark:text-zinc-300" disabled>
+                <button type="button" id="rp-reset" class="rp-action is-ghost" disabled>
                     {{ __('Discard changes') }}
                 </button>
-                <button type="button" id="rp-save" class="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50" disabled>
+                <button type="button" id="rp-save" class="rp-action is-save" disabled>
                     {{ __('Save permissions') }}
                 </button>
             </div>
@@ -230,6 +230,22 @@
         .rp-btn.is-primary { background:#0284c7; color:#fff; }
         .rp-btn.is-danger { background:#fff; border-color:#fecaca; color:#dc2626; }
         .rp-btn.is-muted { background:#f1f5f9; color:#94a3b8; cursor:not-allowed; }
+        /*
+         * Written as real CSS rather than Tailwind utilities. The compiled
+         * stylesheet in public/build is only rebuilt by `npm run build`, so a
+         * class that was not already used somewhere in the app resolves to
+         * nothing -- which is how the save button ended up as white text on a
+         * white card.
+         */
+        .rp-action { border:1px solid transparent; border-radius:9px; font-size:.75rem; font-weight:600; padding:.5rem .9rem; transition:background-color .15s ease, opacity .15s ease; }
+        .rp-action:disabled { cursor:not-allowed; opacity:.45; }
+        .rp-action.is-save { background:#059669; color:#fff; }
+        .rp-action.is-save:not(:disabled):hover { background:#047857; }
+        .rp-action.is-ghost { background:#fff; border-color:#e2e8f0; color:#475569; }
+        .rp-action.is-ghost:not(:disabled):hover { background:#f8fafc; }
+        .dark .rp-action.is-ghost { background:transparent; border-color:#3f3f46; color:#d4d4d8; }
+        .dark .rp-action.is-ghost:not(:disabled):hover { background:#27272a; }
+
         .rp-label { color:#334155; display:block; font-size:.72rem; font-weight:600; margin-bottom:.3rem; }
         .rp-input { background:#fff; border:1px solid #e2e8f0; border-radius:8px; font-size:.76rem; padding:.45rem .6rem; width:100%; }
         .rp-input:focus { border-color:#0ea5e9; box-shadow:0 0 0 2px rgba(14,165,233,.16); outline:none; }

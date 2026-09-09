@@ -32,6 +32,16 @@
                         <dd>{{ $income->source_category }}</dd>
                     </div>
                     <div>
+                        <dt class="font-medium">{{ __('Came from') }}</dt>
+                        <dd>
+                            {{ $income->sourceTypeLabel() }}
+                            @if ($income->source_type !== \App\Models\IncomeEntry::SOURCE_OTHER)
+                                <span class="text-slate-400">&middot;</span>
+                                <span class="font-medium text-slate-900">{{ $income->sourceLabel() }}</span>
+                            @endif
+                        </dd>
+                    </div>
+                    <div>
                         <dt class="font-medium">{{ __('Amount') }}</dt>
                         <dd>{{ number_format($income->amount, 2) }}</dd>
                     </div>

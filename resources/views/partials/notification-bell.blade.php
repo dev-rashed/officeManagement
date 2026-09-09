@@ -33,11 +33,18 @@
     .nb-trigger { align-items:center; background:transparent; border-radius:9px; color:#52525b; display:flex; justify-content:center; padding:.4rem; position:relative; }
     .nb-trigger:hover { background:#f4f4f5; color:#18181b; }
     .nb-badge { background:#e11d48; border-radius:9999px; color:#fff; font-size:.6rem; font-weight:700; line-height:1; min-width:1rem; padding:.16rem .25rem; position:absolute; right:.05rem; top:.05rem; text-align:center; }
-    .nb-panel { background:#fff; border:1px solid #e4e4e7; border-radius:14px; box-shadow:0 12px 34px rgba(24,24,27,.13); overflow:hidden; position:absolute; right:0; top:calc(100% + .4rem); width:20rem; z-index:60; }
+    /*
+     * Fixed, not absolute. The bell lives inside the sidebar, which scrolls --
+     * an absolutely positioned panel is clipped by that overflow. Fixed takes
+     * it out of the sidebar entirely and the coordinates are set in JS from the
+     * bell's position.
+     */
+    .nb-panel { background:#fff; border:1px solid #e4e4e7; border-radius:14px; box-shadow:0 12px 34px rgba(24,24,27,.16); display:flex; flex-direction:column; max-height:min(28rem, calc(100vh - 2rem)); overflow:hidden; position:fixed; width:20rem; z-index:200; }
     .nb-head { align-items:center; border-bottom:1px solid #f4f4f5; color:#18181b; display:flex; font-size:.78rem; font-weight:600; justify-content:space-between; padding:.65rem .8rem; }
     .nb-mark-all { color:#0284c7; font-size:.68rem; font-weight:600; }
     .nb-mark-all:hover { text-decoration:underline; }
-    .nb-list { list-style:none; margin:0; max-height:19rem; overflow-y:auto; padding:0; }
+    .nb-list { flex:1 1 auto; list-style:none; margin:0; min-height:0; overflow-y:auto; padding:0; }
+    .nb-head, .nb-foot { flex-shrink:0; }
     .nb-item { border-bottom:1px solid #fafafa; display:block; padding:.65rem .8rem; }
     .nb-item:hover { background:#fafafa; }
     .nb-item.is-unread { background:#f0f9ff; }
@@ -114,32 +121,77 @@
                     const res = await fetch(RECENT_URL, { headers: { 'Accept': 'application/json' } });
                     if (!res.ok) return;
                     render(await res.json());
+
+                    // The list changes the panel's height, so re-anchor it.
+                    if (!panel.hidden) position();
                 } catch {
                     // A failed poll must never disturb the page.
                 }
             };
 
+            const GAP = 8;
+
+            /**
+             * Anchor the panel to the bell in viewport coordinates.
+             *
+             * Opens to the right of the bell where there is room -- the sidebar
+             * is on the left, so a right-aligned panel would hang off the edge
+             * of the screen -- and flips to the left when there is not.
+             */
+            const position = () => {
+                const r = toggle.getBoundingClientRect();
+                const w = panel.offsetWidth || 320;
+                const h = panel.offsetHeight || 320;
+
+                let left = r.right + GAP;
+
+                if (left + w > window.innerWidth - GAP) {
+                    left = r.left - w - GAP;          // flip to the other side
+                }
+                if (left < GAP) {
+                    left = Math.max(GAP, (window.innerWidth - w) / 2); // centre as a last resort
+                }
+
+                // Prefer aligning the panel's bottom with the bell, since the
+                // bell sits low in the sidebar; clamp so it stays on screen.
+                let top = r.bottom - h;
+                top = Math.min(top, window.innerHeight - h - GAP);
+                top = Math.max(GAP, top);
+
+                panel.style.left = Math.round(left) + 'px';
+                panel.style.top = Math.round(top) + 'px';
+            };
+
+            const openPanel = () => {
+                panel.hidden = false;
+                position();
+                toggle.setAttribute('aria-expanded', 'true');
+                load();
+            };
+
+            const closePanel = () => {
+                panel.hidden = true;
+                toggle.setAttribute('aria-expanded', 'false');
+            };
+
             toggle.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const open = panel.hidden;
-                panel.hidden = !open;
-                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-                if (open) load();
+                panel.hidden ? openPanel() : closePanel();
             });
 
             document.addEventListener('click', (e) => {
-                if (!panel.hidden && !wrap.contains(e.target)) {
-                    panel.hidden = true;
-                    toggle.setAttribute('aria-expanded', 'false');
+                if (!panel.hidden && !wrap.contains(e.target) && !panel.contains(e.target)) {
+                    closePanel();
                 }
             });
 
             document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && !panel.hidden) {
-                    panel.hidden = true;
-                    toggle.setAttribute('aria-expanded', 'false');
-                }
+                if (e.key === 'Escape' && !panel.hidden) closePanel();
             });
+
+            // A fixed panel does not travel with the page, so keep it pinned.
+            window.addEventListener('resize', () => { if (!panel.hidden) position(); });
+            window.addEventListener('scroll', () => { if (!panel.hidden) position(); }, true);
 
             // Mark one read as it is opened, so the badge is honest.
             list.addEventListener('click', (e) => {

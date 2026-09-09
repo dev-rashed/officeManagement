@@ -37,8 +37,11 @@ class CourseCategoryController extends Controller
             $totalRecords = CourseCategory::count();
             $filteredRecords = $query->count();
 
-            $columns = ['id', 'name', 'status'];
-            $orderColumn = $columns[$orderColumnIndex] ?? 'id';
+            // Must line up with the columns the table actually shows:
+            // 0 name, 1 slug, 2 description, 3 status, 4 actions. The previous
+            // map started at 'id', so every sort ordered by the wrong column.
+            $columns = ['name', 'slug', 'description', 'status'];
+            $orderColumn = $columns[$orderColumnIndex] ?? 'name';
             $query->orderBy($orderColumn, $orderDirection);
 
             $categories = $query->skip($start)->take($length)->get();
@@ -47,6 +50,9 @@ class CourseCategoryController extends Controller
                 return [
                     'id' => $category->id,
                     'name' => $category->name,
+                    // The table has a Slug column; without this key DataTables
+                    // throws "Requested unknown parameter 'slug'".
+                    'slug' => $category->slug,
                     'description' => Str::limit($category->description ?? '', 100),
                     'status' => $category->status === 'published' ? '<span class="badge bg-success">Published</span>' : '<span class="badge bg-secondary">Draft</span>',
                     'actions' => '<div class="btn-group btn-group-sm" role="group">

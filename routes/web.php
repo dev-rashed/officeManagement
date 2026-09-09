@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\Finance\ExpenseCategoryController;
 use App\Http\Controllers\Finance\IncomeCategoryController;
@@ -17,7 +18,7 @@ require __DIR__.'/public.php';
 // 'throttle:admin-write' is the backstop behind CSRF and the permission gates:
 // a stolen session still cannot hammer the write endpoints.
 Route::middleware(['auth', 'verified', 'throttle:admin-write'])->group(function () {
-    Route::view('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     // Notifications
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('notifications/recent', [NotificationController::class, 'recent'])->name('notifications.recent');
@@ -67,6 +68,7 @@ Route::middleware(['auth', 'verified', 'throttle:admin-write'])->group(function 
     Route::put('expense/{expense}', [ExpenseController::class, 'update'])->name('expense.update');
     Route::delete('expense/{expense}', [ExpenseController::class, 'destroy'])->name('expense.destroy');
     Route::post('expense/{expense}/approve', [ExpenseController::class, 'approve'])->name('expense.approve');
+    Route::post('expense/{expense}/reimburse', [ExpenseController::class, 'reimburse'])->name('expense.reimburse');
 
     // Projects
     Route::get('projects', [ProjectController::class, 'index'])->name('projects.index');

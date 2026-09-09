@@ -6,57 +6,73 @@ use App\Concerns\HandlesImageUploads;
 use App\Models\Approval;
 use App\Models\ExpenseCategory;
 use App\Models\ExpenseEntry;
+use App\Models\User;
 use App\Services\NotificationDispatcher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class ExpenseController extends Controller
 {
     use HandlesImageUploads;
 
-    public function index()
+    public function index(Request $request)
     {
-        $entries = ExpenseEntry::with('category')->orderByDesc('date')->paginate(20);
-        $totalEntries = ExpenseEntry::count();
-        $pendingEntries = ExpenseEntry::whereIn('status', [
+        $user = $request->user();
+
+        // Everyone sees their own; finance.view_all widens it to everybody's.
+        $scoped = fn () => ExpenseEntry::query()->visibleTo($user);
+
+        $entries = $scoped()
+            ->with(['category', 'creator:id,name', 'payer:id,name'])
+            ->orderByDesc('date')
+            ->paginate(20)
+            ->withQueryString();
+
+        $totalEntries = $scoped()->count();
+        $pendingEntries = $scoped()->whereIn('status', [
             ExpenseEntry::STATUS_PENDING,
             ExpenseEntry::STATUS_PENDING_DIRECTOR,
             ExpenseEntry::STATUS_PENDING_CHAIRMAN,
         ])->count();
-        $approvedEntries = ExpenseEntry::where('status', ExpenseEntry::STATUS_FULLY_APPROVED)->count();
+        $approvedEntries = $scoped()->where('status', ExpenseEntry::STATUS_FULLY_APPROVED)->count();
+
+        // What the office still owes people.
+        $owedQuery = $scoped()->awaitingReimbursement();
+        $owedCount = (clone $owedQuery)->count();
+        $owedAmount = (float) (clone $owedQuery)->sum('amount');
+
+        $seesEveryone = $user->hasPermission('finance.view_all');
 
         return view('pages.finance.expense.index', compact(
             'entries',
             'totalEntries',
             'pendingEntries',
             'approvedEntries',
+            'owedCount',
+            'owedAmount',
+            'seesEveryone',
         ));
     }
 
+    /**
+     * Anyone signed in may record an expense they paid for.
+     *
+     * Deliberately not behind finance.manage: a Director or Chairman who buys
+     * something out of their own pocket has to be able to claim it back, and
+     * they hold no finance permissions.
+     */
     public function create()
     {
-        $this->authorizeFinanceEditor();
-
         $categories = ExpenseCategory::selectable()->get();
+        $payers = $this->payerOptions();
 
-        return view('pages.finance.expense.create', compact('categories'));
+        return view('pages.finance.expense.create', compact('categories', 'payers'));
     }
 
     public function store(Request $request)
     {
-        $this->authorizeFinanceEditor();
-
-        $data = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'expense_category_id' => ['required', 'integer', 'exists:expense_categories,id'],
-            'amount' => ['required', 'numeric', 'min:0'],
-            'date' => ['required', 'date'],
-            'payment_method' => ['nullable', 'string', 'max:255'],
-            'vendor_name' => ['nullable', 'string', 'max:255'],
-            'reference_number' => ['nullable', 'string', 'max:255'],
-            'attachment' => ['nullable', 'file', 'max:20480'],
-            'description' => ['nullable', 'string'],
-        ]);
+        $data = $this->validatedEntry($request);
 
         // A photographed invoice is optimised; a PDF is stored as uploaded.
         $this->applyUpload($request, $data, 'attachment', null, 'uploads/expense', 'document', column: 'attachment_path');
@@ -74,39 +90,32 @@ class ExpenseController extends Controller
         return redirect()->route('expense.index')->with('success', 'Expense entry created successfully.');
     }
 
-    public function show(ExpenseEntry $expense)
+    public function show(Request $request, ExpenseEntry $expense)
     {
-        $expense->load(['category', 'approvals.approver']);
+        $this->authorizeView($request, $expense);
+
+        $expense->load(['category', 'approvals.approver', 'creator:id,name', 'payer:id,name', 'reimburser:id,name']);
 
         return view('pages.finance.expense.show', compact('expense'));
     }
 
-    public function edit(ExpenseEntry $expense)
+    public function edit(Request $request, ExpenseEntry $expense)
     {
-        $this->authorizeFinanceEditor();
+        $this->authorizeEdit($request, $expense);
 
         // Keep the entry's own category in the list even if it was since
         // deactivated, so editing an older expense cannot silently blank it.
         $categories = ExpenseCategory::selectable($expense->expense_category_id)->get();
+        $payers = $this->payerOptions();
 
-        return view('pages.finance.expense.edit', compact('expense', 'categories'));
+        return view('pages.finance.expense.edit', compact('expense', 'categories', 'payers'));
     }
 
     public function update(Request $request, ExpenseEntry $expense)
     {
-        $this->authorizeFinanceEditor();
+        $this->authorizeEdit($request, $expense);
 
-        $data = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'expense_category_id' => ['required', 'integer', 'exists:expense_categories,id'],
-            'amount' => ['required', 'numeric', 'min:0'],
-            'date' => ['required', 'date'],
-            'payment_method' => ['nullable', 'string', 'max:255'],
-            'vendor_name' => ['nullable', 'string', 'max:255'],
-            'reference_number' => ['nullable', 'string', 'max:255'],
-            'attachment' => ['nullable', 'file', 'max:20480'],
-            'description' => ['nullable', 'string'],
-        ]);
+        $data = $this->validatedEntry($request, $expense);
 
         $this->applyUpload($request, $data, 'attachment', $expense->attachment_path, 'uploads/expense', 'document', column: 'attachment_path');
 
@@ -115,14 +124,58 @@ class ExpenseController extends Controller
         return redirect()->route('expense.index')->with('success', 'Expense entry updated successfully.');
     }
 
-    public function destroy(ExpenseEntry $expense)
+    public function destroy(Request $request, ExpenseEntry $expense)
     {
-        $this->authorizeFinanceEditor();
+        $this->authorizeEdit($request, $expense);
 
         Storage::disk('public')->delete($expense->attachment_path);
         $expense->delete();
 
         return redirect()->route('expense.index')->with('success', 'Expense entry deleted successfully.');
+    }
+
+    /**
+     * Record that the office has paid someone back.
+     */
+    public function reimburse(Request $request, ExpenseEntry $expense)
+    {
+        if (! $request->user()->hasPermission('finance.manage')) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'action' => ['required', 'string', 'in:mark_paid,mark_unpaid'],
+            'reimbursement_note' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        if (! $expense->isPersonal()) {
+            return back()->withErrors(['action' => 'This expense was paid by the office, so there is nothing to reimburse.']);
+        }
+
+        // Paying someone back for money that was never approved would be
+        // paying out on an unchecked claim.
+        if ($data['action'] === 'mark_paid' && $expense->status !== ExpenseEntry::STATUS_FULLY_APPROVED) {
+            return back()->withErrors([
+                'action' => 'This expense is not fully approved yet, so it cannot be marked as reimbursed.',
+            ]);
+        }
+
+        if ($data['action'] === 'mark_paid') {
+            $expense->reimbursement_status = ExpenseEntry::REIMBURSE_DONE;
+            $expense->reimbursed_at = now();
+            $expense->reimbursed_by = $request->user()->id;
+        } else {
+            $expense->reimbursement_status = ExpenseEntry::REIMBURSE_PENDING;
+            $expense->reimbursed_at = null;
+            $expense->reimbursed_by = null;
+        }
+
+        $expense->reimbursement_note = $data['reimbursement_note'] ?? null;
+        $expense->save();
+
+        return back()->with('success', $data['action'] === 'mark_paid'
+            ? 'Marked as reimbursed.'
+            : 'Moved back to awaiting reimbursement.');
     }
 
     public function approve(Request $request, ExpenseEntry $expense)
@@ -180,12 +233,79 @@ class ExpenseController extends Controller
         return back()->with('success', 'Approval action recorded successfully.');
     }
 
-    private function authorizeFinanceEditor(): void
+    /**
+     * Validation shared by store() and update(), including the reimbursement
+     * fields.
+     */
+    private function validatedEntry(Request $request, ?ExpenseEntry $expense = null): array
     {
-        $user = auth()->user();
+        $user = $request->user();
 
-        if (! $user || ! $user->hasPermission('finance.manage')) {
-            abort(403);
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'expense_category_id' => ['required', 'integer', 'exists:expense_categories,id'],
+            'amount' => ['required', 'numeric', 'min:0'],
+            'date' => ['required', 'date'],
+            'payment_method' => ['nullable', 'string', 'max:255'],
+            'payment_source' => ['required', 'string', Rule::in(array_keys(ExpenseEntry::SOURCES))],
+            'paid_by' => ['nullable', 'integer', 'exists:users,id'],
+            'vendor_name' => ['nullable', 'string', 'max:255'],
+            'reference_number' => ['nullable', 'string', 'max:255'],
+            'attachment' => ['nullable', 'file', 'max:20480'],
+            'description' => ['nullable', 'string'],
+        ]);
+
+        if ($data['payment_source'] === ExpenseEntry::SOURCE_PERSONAL) {
+            // Someone without finance.manage can only claim for themselves --
+            // otherwise anyone could file a claim in a colleague's name.
+            $canNameOthers = $user->hasPermission('finance.manage');
+            $data['paid_by'] = $canNameOthers && filled($data['paid_by'] ?? null)
+                ? (int) $data['paid_by']
+                : $user->id;
+
+            // Don't reset the status of an entry already settled.
+            $data['reimbursement_status'] = $expense?->isReimbursed()
+                ? ExpenseEntry::REIMBURSE_DONE
+                : ExpenseEntry::REIMBURSE_PENDING;
+        } else {
+            $data['paid_by'] = null;
+            $data['reimbursement_status'] = ExpenseEntry::REIMBURSE_NOT_REQUIRED;
         }
+
+        return $data;
+    }
+
+    /** Options for "who paid", when the person is allowed to name someone else. */
+    private function payerOptions()
+    {
+        if (! auth()->user()?->hasPermission('finance.manage')) {
+            return collect();
+        }
+
+        return User::query()->where('is_active', true)->orderBy('name')->get(['id', 'name', 'role']);
+    }
+
+    private function authorizeView(Request $request, ExpenseEntry $expense): void
+    {
+        abort_unless($expense->isVisibleTo($request->user()), 403);
+    }
+
+    /**
+     * Editing is for finance staff, or for the person who filed it while it is
+     * still their own pending claim.
+     */
+    private function authorizeEdit(Request $request, ExpenseEntry $expense): void
+    {
+        $user = $request->user();
+
+        if ($user->hasPermission('finance.manage')) {
+            return;
+        }
+
+        $isOwn = $expense->created_by === $user->id || $expense->paid_by === $user->id;
+        $stillEditable = $expense->status === ExpenseEntry::STATUS_PENDING
+            || $expense->status === ExpenseEntry::STATUS_SENT_BACK;
+
+        abort_unless($isOwn && $stillEditable && ! $expense->isReimbursed(), 403);
     }
 }

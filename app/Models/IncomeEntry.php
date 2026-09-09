@@ -12,6 +12,9 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 #[Fillable([
     'title',
     'source_category',
+    'source_type',
+    'project_id',
+    'contributor_id',
     'amount',
     'date',
     'payment_method',
@@ -57,10 +60,102 @@ class IncomeEntry extends Model
         self::STATUS_PENDING_CHAIRMAN => self::STAGE_CHAIRMAN,
     ];
 
+    /** Where the money came from. */
+    public const SOURCE_PROJECT = 'project';
+    public const SOURCE_CONTRIBUTION = 'contribution';
+    public const SOURCE_OTHER = 'other';
+
+    public const SOURCE_TYPES = [
+        self::SOURCE_PROJECT => 'From a project',
+        self::SOURCE_CONTRIBUTION => 'Personal contribution',
+        self::SOURCE_OTHER => 'Other',
+    ];
+
+    /** Roles whose members are offered as contributors. */
+    public const CONTRIBUTOR_ROLES = [
+        User::ROLE_MANAGING_DIRECTOR,
+        User::ROLE_DIRECTOR,
+        User::ROLE_CHAIRMAN,
+    ];
+
     protected $casts = [
         'amount' => 'decimal:2',
         'date' => 'date',
     ];
+
+    protected $attributes = [
+        'source_type' => self::SOURCE_OTHER,
+    ];
+
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
+    }
+
+    public function contributor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'contributor_id');
+    }
+
+    public function isContribution(): bool
+    {
+        return $this->source_type === self::SOURCE_CONTRIBUTION;
+    }
+
+    public function isFromProject(): bool
+    {
+        return $this->source_type === self::SOURCE_PROJECT;
+    }
+
+    public function sourceTypeLabel(): string
+    {
+        return self::SOURCE_TYPES[$this->source_type] ?? ucfirst((string) $this->source_type);
+    }
+
+    /** A readable description of where this money came from. */
+    public function sourceLabel(): string
+    {
+        return match ($this->source_type) {
+            self::SOURCE_PROJECT => $this->project?->title ?? __('A project'),
+            self::SOURCE_CONTRIBUTION => $this->contributor?->name ?? __('A contributor'),
+            default => $this->source_category ?: __('Other'),
+        };
+    }
+
+    public function scopeContributedBy($query, int $userId)
+    {
+        return $query->where('source_type', self::SOURCE_CONTRIBUTION)
+            ->where('contributor_id', $userId);
+    }
+
+    public function scopeForProject($query, int $projectId)
+    {
+        return $query->where('project_id', $projectId);
+    }
+
+    /**
+     * Income a user may see.
+     *
+     * Mirrors the expense rule: everyone can see what they contributed or
+     * recorded; seeing everyone else's needs finance.view_all.
+     */
+    public function scopeVisibleTo($query, User $user)
+    {
+        if ($user->hasPermission('finance.view_all')) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($user) {
+            $q->where('created_by', $user->id)->orWhere('contributor_id', $user->id);
+        });
+    }
+
+    public function isVisibleTo(User $user): bool
+    {
+        return $user->hasPermission('finance.view_all')
+            || $this->created_by === $user->id
+            || $this->contributor_id === $user->id;
+    }
 
     public function creator(): BelongsTo
     {

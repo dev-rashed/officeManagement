@@ -50,6 +50,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::before(fn (User $user, string $ability) => $user->hasPermission('*') ? true : null);
 
         Gate::define('finance.view', fn (User $user): bool => $user->hasPermission('finance.view'));
+        // Seeing your OWN expenses is a baseline, not a permission. This is
+        // what lets someone see everyone else's.
+        Gate::define('finance.view_all', fn (User $user): bool => $user->hasPermission('finance.view_all'));
+        Gate::define('finance.reimburse', fn (User $user): bool => $user->hasPermission('finance.manage'));
         Gate::define('finance.manage', fn (User $user): bool => $user->hasPermission('finance.manage'));
         Gate::define('finance.categories.manage', fn (User $user): bool => $user->hasPermission('finance.categories.manage'));
         Gate::define('approvals.manage', fn (User $user): bool => $user->hasPermission('approvals.manage'));

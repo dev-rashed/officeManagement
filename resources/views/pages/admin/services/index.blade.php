@@ -31,8 +31,13 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const table = $('#servicesTable').DataTable({
+(function () {
+const TABLE_ID = "servicesTable";
+const __initPage = function () {
+    // Fires for every wire:navigate, so ignore other pages.
+    if (!document.getElementById(TABLE_ID) || typeof $ === 'undefined' || !$.fn.DataTable) return;
+
+    const table = (function(){ const $el = $('#servicesTable'); if ($.fn.DataTable.isDataTable($el)) { $el.DataTable().destroy(); } return $el; })().DataTable({
         processing: true,
         serverSide: true,
         ajax: "{{ route('admin.services.data') }}",
@@ -49,7 +54,30 @@ document.addEventListener('DOMContentLoaded', function() {
             "emptyTable": "No services found"
         }
     });
-});
+};
+
+/*
+ * The sidebar navigates with wire:navigate, which swaps the body without a
+ * reload -- DOMContentLoaded will not fire again, so the table has to be built
+ * on each swap. The handler is kept on window under a per-table key and the
+ * previous one removed first, otherwise every visit would stack another
+ * listener.
+ */
+const HANDLER_KEY = '__dtInit_' + TABLE_ID;
+
+if (window[HANDLER_KEY]) {
+    document.removeEventListener('livewire:navigated', window[HANDLER_KEY]);
+}
+
+window[HANDLER_KEY] = __initPage;
+document.addEventListener('livewire:navigated', __initPage);
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', __initPage);
+} else {
+    __initPage();
+}
+})();
 </script>
 @endpush
 

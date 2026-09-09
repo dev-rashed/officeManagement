@@ -56,32 +56,56 @@
         @endunless
 
         {{-- Headline numbers --}}
-        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="an-tiles">
             @foreach ([
-                ['label' => __('Page views'), 'key' => 'views'],
-                ['label' => __('Unique visitors'), 'key' => 'visitors'],
-                ['label' => __('Sessions'), 'key' => 'sessions'],
+                ['label' => __('Page views'), 'key' => 'views', 'accent' => 'blue', 'icon' => 'M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z'],
+                ['label' => __('Unique visitors'), 'key' => 'visitors', 'accent' => 'green', 'icon' => 'M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.97 5.97 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z'],
+                ['label' => __('Sessions'), 'key' => 'sessions', 'accent' => 'violet', 'icon' => 'M3 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2h-2.22l.123.489.804.804A1 1 0 0113 18H7a1 1 0 01-.707-1.707l.804-.804L7.22 15H5a2 2 0 01-2-2V5zm5.771 7H5V5h10v7H8.771z'],
             ] as $tile)
                 @php($stat = $summary[$tile['key']])
-                <div class="an-tile">
-                    <p class="an-tile-label">{{ $tile['label'] }}</p>
+                <article class="an-tile is-{{ $tile['accent'] }}">
+                    <header class="an-tile-head">
+                        <span class="an-tile-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-4"><path fill-rule="evenodd" d="{{ $tile['icon'] }}" clip-rule="evenodd"/></svg>
+                        </span>
+                        <p class="an-tile-label">{{ $tile['label'] }}</p>
+                    </header>
+
                     <p class="an-tile-value">{{ $fmt($stat['value']) }}</p>
-                    @if ($stat['change'] !== null)
-                        <p @class(['an-delta', 'is-up' => $stat['change'] >= 0, 'is-down' => $stat['change'] < 0])>
-                            {{ $stat['change'] >= 0 ? '▲' : '▼' }} {{ abs($stat['change']) }}%
-                            <span class="an-delta-note">{{ __('vs previous period') }}</span>
-                        </p>
-                    @else
-                        <p class="an-delta is-flat">{{ __('no earlier data') }}</p>
-                    @endif
-                </div>
+
+                    <footer class="an-tile-foot">
+                        @if ($stat['change'] !== null)
+                            <span @class(['an-delta', 'is-up' => $stat['change'] >= 0, 'is-down' => $stat['change'] < 0])>
+                                @if ($stat['change'] >= 0)
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-3"><path fill-rule="evenodd" d="M10 17a1 1 0 01-1-1V6.41L5.7 9.71a1 1 0 01-1.4-1.42l5-5a1 1 0 011.4 0l5 5a1 1 0 11-1.4 1.42L11 6.4V16a1 1 0 01-1 1z" clip-rule="evenodd"/></svg>
+                                @else
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-3"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v9.59l3.3-3.3a1 1 0 111.4 1.42l-5 5a1 1 0 01-1.4 0l-5-5a1 1 0 111.4-1.42L9 13.6V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
+                                @endif
+                                {{ abs($stat['change']) }}%
+                            </span>
+                            {{-- diffInDays returns a float, so an unrounded value would print "29.999 days" --}}
+                            <span class="an-delta-note">{{ __('vs previous :n days', ['n' => max(1, (int) round($from->diffInDays($to)) + 1)]) }}</span>
+                        @else
+                            <span class="an-delta is-flat">{{ __('No earlier data to compare') }}</span>
+                        @endif
+                    </footer>
+                </article>
             @endforeach
 
-            <div class="an-tile">
-                <p class="an-tile-label">{{ __('Views per visitor') }}</p>
+            <article class="an-tile is-amber">
+                <header class="an-tile-head">
+                    <span class="an-tile-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-4"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0 1 1 0 002 0zm-1 3a1 1 0 011 1v3a1 1 0 11-2 0v-3a1 1 0 011-1z" clip-rule="evenodd"/></svg>
+                    </span>
+                    <p class="an-tile-label">{{ __('Views per visitor') }}</p>
+                </header>
+
                 <p class="an-tile-value">{{ $summary['views_per_visitor']['value'] }}</p>
-                <p class="an-delta is-flat">{{ $fmt($summary['bot_views']) }} {{ __('bot views filtered out') }}</p>
-            </div>
+
+                <footer class="an-tile-foot">
+                    <span class="an-delta-note">{{ $fmt($summary['bot_views']) }} {{ __('bot views filtered out') }}</span>
+                </footer>
+            </article>
         </div>
 
         {{-- Traffic over time --}}
@@ -124,7 +148,7 @@
             </div>
         </section>
 
-        <div class="grid gap-5 xl:grid-cols-2">
+        <div class="an-pair">
             {{-- Top pages --}}
             <section class="an-card">
                 <header class="an-card-head"><h2>{{ __('Most viewed pages') }}</h2></header>
@@ -234,7 +258,7 @@
         </div>
 
         {{-- Audience breakdowns --}}
-        <div class="grid gap-5 lg:grid-cols-3">
+        <div class="an-trio">
             @foreach ([
                 ['title' => __('Devices'), 'rows' => $devices],
                 ['title' => __('Browsers'), 'rows' => $browsers],
@@ -307,18 +331,54 @@
         .an-date { border:1px solid #dbe4f0; border-radius:9px; font-size:.7rem; padding:.32rem .45rem; }
         .an-apply { background:#0f172a; border-radius:9px; color:#fff; font-size:.7rem; font-weight:600; padding:.36rem .7rem; }
 
-        .an-tile { background:#fff; border:1px solid #dbe4f0; border-radius:16px; padding:.9rem 1rem; }
-        .an-tile-label { color:#64748b; font-size:.7rem; font-weight:600; }
-        .an-tile-value { color:#0f172a; font-size:1.7rem; font-weight:700; font-variant-numeric:tabular-nums; line-height:1.1; margin-top:.45rem; }
-        .an-delta { font-size:.66rem; font-weight:600; margin-top:.4rem; }
-        .an-delta.is-up { color:#059669; }
-        .an-delta.is-down { color:#dc2626; }
-        .an-delta.is-flat { color:#94a3b8; font-weight:500; }
-        .an-delta-note { color:#94a3b8; font-weight:500; }
+        /* Own grid, so the layout does not depend on Tailwind classes being
+           present in the compiled stylesheet. */
+        .an-tiles { display:grid; gap:.85rem; grid-template-columns:1fr; }
+        .an-pair { display:grid; gap:1.15rem; grid-template-columns:1fr; }
+        .an-trio { display:grid; gap:1.15rem; grid-template-columns:1fr; }
+        @media (min-width:640px){ .an-tiles{grid-template-columns:repeat(2,minmax(0,1fr))} }
+        @media (min-width:1024px){ .an-trio{grid-template-columns:repeat(3,minmax(0,1fr))} }
+        @media (min-width:1280px){
+            .an-tiles{grid-template-columns:repeat(4,minmax(0,1fr))}
+            .an-pair{grid-template-columns:repeat(2,minmax(0,1fr))}
+        }
 
-        .an-card { background:#fff; border:1px solid #dbe4f0; border-radius:18px; padding:1rem 1.1rem; }
-        .an-card-head { align-items:center; border-bottom:1px solid #eef2f7; display:flex; justify-content:space-between; margin-bottom:.85rem; padding-bottom:.65rem; }
-        .an-card-head h2 { color:#0f172a; font-size:.86rem; font-weight:700; }
+        /* ---- KPI tiles ---- */
+        .an-tile {
+            background:#fff; border:1px solid #e6ecf4; border-radius:16px;
+            box-shadow:0 1px 2px rgba(15,23,42,.04);
+            display:flex; flex-direction:column; gap:.15rem;
+            padding:1rem 1.05rem .9rem; position:relative; overflow:hidden;
+            transition:box-shadow .18s ease, border-color .18s ease, transform .18s ease;
+        }
+        .an-tile::before { content:''; height:100%; left:0; position:absolute; top:0; width:3px; }
+        .an-tile:hover { border-color:#d3e0f0; box-shadow:0 6px 18px rgba(15,23,42,.07); transform:translateY(-1px); }
+        .an-tile.is-blue::before   { background:#0284c7; }
+        .an-tile.is-green::before  { background:#059669; }
+        .an-tile.is-violet::before { background:#7c3aed; }
+        .an-tile.is-amber::before  { background:#d97706; }
+
+        .an-tile-head { align-items:center; display:flex; gap:.45rem; }
+        .an-tile-icon { align-items:center; border-radius:8px; display:flex; height:1.5rem; justify-content:center; width:1.5rem; }
+        .an-tile.is-blue   .an-tile-icon { background:#e0f2fe; color:#0369a1; }
+        .an-tile.is-green  .an-tile-icon { background:#d1fae5; color:#047857; }
+        .an-tile.is-violet .an-tile-icon { background:#ede9fe; color:#6d28d9; }
+        .an-tile.is-amber  .an-tile-icon { background:#fef3c7; color:#b45309; }
+        .an-tile-label { color:#64748b; font-size:.72rem; font-weight:600; letter-spacing:.01em; }
+
+        .an-tile-value { color:#0f172a; font-size:2rem; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.02em; line-height:1.15; margin-top:.5rem; }
+
+        .an-tile-foot { align-items:center; display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.55rem; }
+        .an-delta { align-items:center; border-radius:9999px; display:inline-flex; font-size:.66rem; font-weight:700; gap:.15rem; padding:.14rem .4rem; }
+        .an-delta.is-up { background:#dcfce7; color:#15803d; }
+        .an-delta.is-down { background:#fee2e2; color:#b91c1c; }
+        .an-delta.is-flat { background:transparent; color:#94a3b8; font-weight:500; padding:0; }
+        .an-delta-note { color:#94a3b8; font-size:.66rem; font-weight:500; }
+
+        /* ---- Panels ---- */
+        .an-card { background:#fff; border:1px solid #e6ecf4; border-radius:16px; box-shadow:0 1px 2px rgba(15,23,42,.04); padding:1.05rem 1.15rem 1.15rem; }
+        .an-card-head { align-items:center; border-bottom:1px solid #f1f5f9; display:flex; gap:1rem; justify-content:space-between; margin-bottom:.9rem; padding-bottom:.7rem; }
+        .an-card-head h2 { color:#0f172a; font-size:.88rem; font-weight:700; letter-spacing:-.01em; }
         .an-sub { color:#64748b; font-size:.68rem; font-weight:700; letter-spacing:.06em; margin:1rem 0 .4rem; text-transform:uppercase; }
         .an-none { color:#94a3b8; font-size:.75rem; font-style:italic; padding:.6rem 0; }
 

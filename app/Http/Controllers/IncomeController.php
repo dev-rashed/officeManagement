@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Concerns\HandlesImageUploads;
 use App\Models\IncomeEntry;
+use App\Models\Project;
+use App\Models\User;
 use App\Services\NotificationDispatcher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class IncomeController extends Controller
 {
@@ -31,7 +34,7 @@ class IncomeController extends Controller
 
     public function indexData(Request $request)
     {
-        $query = IncomeEntry::query()->orderByDesc('date');
+        $query = IncomeEntry::query()->with(['project:id,title', 'contributor:id,name'])->orderByDesc('date');
 
         $totalRecords = IncomeEntry::count();
 
@@ -66,7 +69,10 @@ class IncomeController extends Controller
 
             return [
                 'title'           => '<span class="data-table-title">'.e($income->title).'</span>',
-                'source_category' => '<span class="data-table-subtle">'.e($income->source_category).'</span>',
+                'source_category' => '<span class="data-table-subtle">'.e($income->source_category).'</span>'
+                    .($income->source_type === IncomeEntry::SOURCE_OTHER
+                        ? ''
+                        : '<br><span class="data-table-badge is-neutral">'.e($income->sourceLabel()).'</span>'),
                 'amount'          => '&#2547; '.number_format((float) $income->amount, 2),
                 'date'            => $income->date instanceof \Illuminate\Support\Carbon ? $income->date->format('Y-m-d') : \Illuminate\Support\Carbon::parse($income->date)->format('Y-m-d'),
                 'status'          => '<span class="data-table-badge '.$statusClasses.'">'.e($income->statusLabel()).'</span>',
@@ -87,7 +93,52 @@ class IncomeController extends Controller
     {
         $this->authorizeFinanceEditor();
 
-        return view('pages.finance.income.create');
+        return view('pages.finance.income.create', $this->sourceOptions());
+    }
+
+    /** Projects and board members offered as income sources. */
+    private function sourceOptions(): array
+    {
+        return [
+            'projects' => Project::orderByDesc('start_date')->get(['id', 'title', 'status']),
+            'contributors' => User::query()
+                ->whereIn('role', IncomeEntry::CONTRIBUTOR_ROLES)
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'role']),
+        ];
+    }
+
+    /**
+     * Validation for the source fields, shared by store() and update().
+     */
+    private function validatedSource(Request $request): array
+    {
+        $data = $request->validate([
+            'source_type' => ['required', 'string', Rule::in(array_keys(IncomeEntry::SOURCE_TYPES))],
+            'project_id' => ['nullable', 'integer', 'exists:projects,id'],
+            'contributor_id' => ['nullable', 'integer', 'exists:users,id'],
+        ]);
+
+        // Only keep the field that belongs to the chosen source, so switching
+        // from one to the other cannot leave a stale link behind.
+        return match ($data['source_type']) {
+            IncomeEntry::SOURCE_PROJECT => [
+                'source_type' => IncomeEntry::SOURCE_PROJECT,
+                'project_id' => $data['project_id'] ?: null,
+                'contributor_id' => null,
+            ],
+            IncomeEntry::SOURCE_CONTRIBUTION => [
+                'source_type' => IncomeEntry::SOURCE_CONTRIBUTION,
+                'project_id' => null,
+                'contributor_id' => $data['contributor_id'] ?: null,
+            ],
+            default => [
+                'source_type' => IncomeEntry::SOURCE_OTHER,
+                'project_id' => null,
+                'contributor_id' => null,
+            ],
+        };
     }
 
     public function store(Request $request)
@@ -106,6 +157,8 @@ class IncomeController extends Controller
         ]);
 
         // A photographed receipt is optimised; a PDF is stored as uploaded.
+        $data += $this->validatedSource($request);
+
         $this->applyUpload($request, $data, 'attachment', null, 'uploads/income', 'document', column: 'attachment_path');
 
         $data['status']     = IncomeEntry::STATUS_PENDING;
@@ -125,7 +178,7 @@ class IncomeController extends Controller
 
     public function show(IncomeEntry $income)
     {
-        $income->load(['approvals.approver']);
+        $income->load(['approvals.approver', 'project:id,title', 'contributor:id,name']);
 
         return view('pages.finance.income.show', compact('income'));
     }
@@ -134,7 +187,7 @@ class IncomeController extends Controller
     {
         $this->authorizeFinanceEditor();
 
-        return view('pages.finance.income.edit', compact('income'));
+        return view('pages.finance.income.edit', ['income' => $income] + $this->sourceOptions());
     }
 
     public function update(Request $request, IncomeEntry $income)
@@ -151,6 +204,8 @@ class IncomeController extends Controller
             'attachment'       => ['nullable', 'file', 'max:20480'],
             'description'      => ['nullable', 'string'],
         ]);
+
+        $data += $this->validatedSource($request);
 
         $this->applyUpload($request, $data, 'attachment', $income->attachment_path, 'uploads/income', 'document', column: 'attachment_path');
 

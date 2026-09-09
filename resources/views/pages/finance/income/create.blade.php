@@ -54,6 +54,10 @@
                     <input type="text" name="reference_number" value="{{ old('reference_number') }}" class="mt-2 w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm">
                 </label>
 
+                @include('partials.income-source-fields')
+
+
+
                 <div class="lg:col-span-2">
                     <x-image-upload
                         name="attachment"

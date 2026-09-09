@@ -1,6 +1,6 @@
 # Project Checklist
 
-Where everything stands as of **8 September 2026**.
+Where everything stands as of **9 September 2026**.
 
 | Status | Meaning |
 | --- | --- |
@@ -17,19 +17,18 @@ Related: [`backend-map.md`](backend-map.md) · [`admin-modules-and-fields.md`](a
 
 | Area | ✅ Done | ⚠️ Needs change | ☐ To build |
 | --- | :-: | :-: | :-: |
-| Access control and users | 6 | 0 | 1 |
-| Finance | 4 | 7 | 1 |
+| Access control and users | 7 | 0 | 0 |
+| Finance | 7 | 7 | 1 |
 | Website CMS and SEO | 6 | 1 | 0 |
 | Analytics | 2 | 1 | 0 |
 | Notifications | 5 | 2 | 1 |
 | Training (ASSET) | 1 | 3 | 10 |
 | API / Android | 0 | 1 | 5 |
 | Operations | 3 | 3 | 0 |
-| **Total** | **27** | **18** | **18** |
+| **Total** | **31** | **18** | **17** |
 
-**The single most blocking gap:** there is no way to create a user. No Users screen, and registration is
-disabled. New staff can only be added by database seeding, which means the approval chain cannot be
-extended without a developer.
+**The single most blocking gap:** the training module. Everything ASSET needs — trades, batches,
+enrolment, attendance, assessment, certificates — is still on paper. Section 6 is the whole of it.
 
 **Security posture, verified 8 Sep 2026:** CSRF on every state-changing route with no exemptions, a
 permission gate on every controller, rate limiting on all authenticated writes, and a captcha on the three
@@ -45,7 +44,7 @@ forms an unauthenticated visitor can reach. 38 assertions passing.
 - [x] ✅ **Rate limiting** — `throttle:admin-write` (90/min per user) on every authenticated group, plus Fortify's login and two-factor limiters
 - [x] ✅ **Captcha on the auth forms** — login, forgot-password, reset-password, via `mews/captcha` (self-hosted, no external service)
 - [x] ✅ **Roles & permissions admin** — `roles`, `permissions` and `permission_role` tables seeded from the old config, a permission matrix screen, custom roles, and cached lookups that clear on save. **Superadmin only**
-- [ ] ☐ **User management screen** — **no `UserController`, no `users` routes, no way to create or edit a user in the admin.** `users.manage` is defined and granted to admin/superadmin but nothing consumes it. This is also what makes role assignment possible — the Roles screen can define a role, but nobody can be *put* into it yet
+- [x] ✅ **User management screen** — `UserController` on `users.manage`: create, edit, assign a role, deactivate (`is_active`, enforced on every request by `EnsureUserIsActive`) and delete. Nobody can hand out a role they do not hold themselves, and a protected superadmin can be neither demoted nor removed — the last one is guarded at model level
 
 **Who can now do what**
 
@@ -64,8 +63,7 @@ cannot be granted from inside the very screen it protects — otherwise an admin
 grant themselves everything. Tested by forging the permission onto the admin role: the screen still
 returned 403.
 
-**Do first:** the Users screen. It is the last thing in this section that is genuinely blocking, and it is
-what lets you actually assign the roles this screen defines.
+**Nothing is blocking in this section any more.** Roles are definable and people can be put into them.
 
 ---
 
@@ -77,13 +75,16 @@ what lets you actually assign the roles this screen defines.
 - [x] ✅ **Expense module** — CRUD, attachments, three-stage approval
 - [x] ✅ **Expense categories** — new `expense_categories` table, FK on `expense_entries`, admin screen with in-use protection, `finance.categories.manage` permission, data-preserving backfill migration
 - [x] ✅ **Reject reason is mandatory** — rejecting or sending back requires a reason; shown to the submitter in a banner at the top of the entry, approval history colour-coded by outcome
+- [x] ✅ **Expense reimbursement** — `payment_source` (office / personal), `paid_by`, and a reimbursement state machine; anyone can file what they spent, `finance.manage` marks it paid, `finance.view_all` decides who sees other people's entries
+- [x] ✅ **Income source attribution** — `income_entries.source_type` is one of project / contribution / other, with `project_id` and `contributor_id`. Switching the type clears the link that no longer applies, so an entry can never point at both. Board members (chairman / MD / director) are offered as contributors
+- [x] ✅ **Personal dashboard** — `DashboardController` shows each person what they have contributed, what the office still owes them, the running projects with registered student counts, whatever is waiting on their approval, and their latest notifications. Everything is scoped to the viewer; seeing other people's figures needs `finance.view_all`
 
 ### Needs modification
 
 - [ ] ⚠️ **Income categories are still free text** — `income_entries.source_category` is a string, while `income_categories` exists as a managed table. Same fix as expenses; the expense migration is the template
 - [ ] ⚠️ **`created_by` is nullable on both tables** — an entry can have no owner. Should be NOT NULL and always set server-side
 - [ ] ⚠️ **One attachment per entry** — `attachment_path` holds a single file and a replacement deletes the old one. Needs the polymorphic `attachments` table so an expense can carry several invoice photos
-- [ ] ⚠️ **No `project_id` on entries** — "what has ASSET cost us" cannot be answered. Both tables need a nullable `project_id`
+- [ ] ⚠️ **`project_id` is on income only** — "what has ASSET *earned*" is now answerable, but not "what has it cost us". `expense_entries` still needs the same nullable `project_id`
 - [ ] ⚠️ **`sent_back` is a dead end** — `update()` never resets the status and no route moves an entry out of it. A correction can never re-enter the approval chain
 - [ ] ⚠️ **~200 duplicated lines** between `IncomeEntry`/`ExpenseEntry` and their controllers — constants, label maps, `canBeApprovedBy()`, `approve()`. Needs an `Approvable` trait and an `ApprovalService`
 - [ ] ⚠️ **Approval checks the role, not the permission** — `canBeApprovedBy()` calls `isManagingDirector()` etc. directly, so `approvals.manage` does nothing and **a superadmin cannot approve anything**
