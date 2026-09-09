@@ -24,8 +24,9 @@ class ServiceController extends Controller
 
         if ($request->ajax()) {
             $draw = $request->input('draw');
-            $start = $request->input('start');
-            $length = $request->input('length');
+            $start = max(0, (int) $request->input('start', 0));
+            // -1 is DataTables' "show all"; anything absent falls back to a page.
+            $length = (int) $request->input('length', 10);
             $search = $request->input('search.value');
             $orderColumnIndex = $request->input('order.0.column');
             $orderDirection = in_array($request->input('order.0.dir'), ['asc', 'desc'], true) ? $request->input('order.0.dir') : 'asc';
@@ -51,7 +52,7 @@ class ServiceController extends Controller
                 $query->orderBy($orderColumn, $orderDirection);
             }
 
-            $services = $query->skip($start)->take($length)->get();
+            $services = $query->skip($start)->take($length > 0 ? $length : 100)->get();
 
             $data = $services->map(function ($service) {
                 return [
@@ -59,18 +60,14 @@ class ServiceController extends Controller
                     'title' => $service->title,
                     'slug' => $service->slug,
                     'category' => $service->category ? $service->category->name : '-',
-                    'status' => $service->status === 'published' ? '<span class="badge bg-success">Published</span>' : '<span class="badge bg-secondary">Draft</span>',
-                    'show_on_homepage' => $service->show_on_homepage ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>',
+                    'status' => $service->status === 'published' ? '<span class="dt-badge is-on">Published</span>' : '<span class="dt-badge is-off">Draft</span>',
+                    'show_on_homepage' => $service->show_on_homepage ? '<span class="dt-badge is-on">Yes</span>' : '<span class="dt-badge is-off">No</span>',
                     'sort_order' => $service->sort_order,
-                    'actions' => '<div class="btn-group btn-group-sm" role="group">
-                        <a href="' . route('admin.services.edit', $service->id) . '" class="btn btn-outline-primary btn-sm">
-                            <i class="fi fi-rr-edit"></i>
-                        </a>
-                        <form action="' . route('admin.services.destroy', $service->id) . '" method="POST" onsubmit="return confirm(\'Are you sure you want to delete this service?\');" style="display: inline;">
+                    'actions' => '<div class="dt-actions">
+                        <a href="' . route('admin.services.edit', $service->id) . '" class="dt-btn is-edit" title="Edit" aria-label="Edit"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M2.695 14.763l-1.262 3.155a.5.5 0 00.65.649l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z"/></svg></a>
+                        <form action="' . route('admin.services.destroy', $service->id) . '" method="POST" class="dt-del" onsubmit="return confirm(\'Are you sure you want to delete this service?\');">
                             ' . csrf_field() . method_field('DELETE') . '
-                            <button type="submit" class="btn btn-outline-danger btn-sm">
-                                <i class="fi fi-rr-trash"></i>
-                            </button>
+                            <button type="submit" class="dt-btn is-delete" title="Delete" aria-label="Delete"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd"/></svg></button>
                         </form>
                     </div>',
                 ];

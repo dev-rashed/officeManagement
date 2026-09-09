@@ -26,9 +26,21 @@
                 'description' => $seoFallback('description'),
             ],
         );
+
+        // Name, logo and icon for the header, the footer and the tab.
+        $branding = \App\Models\SeoSetting::branding();
     @endphp
 
     <meta name="author" content="{{ $seo['settings']->site_name }}">
+
+    @if ($branding['favicon'])
+        <link rel="icon" href="{{ $branding['favicon'] }}" @if($branding['favicon_type']) type="{{ $branding['favicon_type'] }}" @endif>
+        <link rel="apple-touch-icon" href="{{ $branding['favicon'] }}">
+    @else
+        <link rel="icon" href="/favicon.ico" sizes="any">
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    @endif
 
     @include('partials.seo-head', ['seo' => $seo])
 
@@ -53,12 +65,18 @@
 
     <header class="site-header" data-header>
         <nav class="nav container" aria-label="Primary navigation">
-            <a class="brand" href="{{ route('home') }}" aria-label="HashTag home">
-                <span class="brand-mark">H</span>
-                <span>
-                    <span class="brand-name">HashTag</span>
-                    <span class="brand-line">Research & Technology</span>
-                </span>
+            <a class="brand" href="{{ route('home') }}" aria-label="{{ $branding['name'] }} home">
+                @if ($branding['logo'])
+                    {{-- An uploaded logo usually carries the name already, so it
+                         replaces the letter mark and the wordmark both. --}}
+                    <img src="{{ $branding['logo'] }}" alt="{{ $branding['name'] }}" class="brand-logo">
+                @else
+                    <span class="brand-mark">H</span>
+                    <span>
+                        <span class="brand-name">HashTag</span>
+                        <span class="brand-line">Research & Technology</span>
+                    </span>
+                @endif
             </a>
 
             <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" data-nav-toggle>
@@ -89,11 +107,15 @@
             <div class="footer-grid">
                 <div>
                     <div class="brand" style="margin-bottom: 1rem;">
-                        <span class="brand-mark">H</span>
-                        <span>
-                            <span class="brand-name">HashTag</span>
-                            <span class="brand-line">Research & Technology</span>
-                        </span>
+                        @if ($branding['logo'])
+                            <img src="{{ $branding['logo'] }}" alt="{{ $branding['name'] }}" class="brand-logo">
+                        @else
+                            <span class="brand-mark">H</span>
+                            <span>
+                                <span class="brand-name">HashTag</span>
+                                <span class="brand-line">Research & Technology</span>
+                            </span>
+                        @endif
                     </div>
                     <p style="font-size: 0.9rem; color: rgba(255, 255, 255, 0.7);">
                         Smart IT Solutions & Digital Innovation for global clients.

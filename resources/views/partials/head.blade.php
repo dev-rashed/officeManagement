@@ -5,9 +5,18 @@
     {{ filled($title ?? null) ? $title.' - '.config('app.name', 'Laravel') : config('app.name', 'Laravel') }}
 </title>
 
-<link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+@php
+    $branding = \App\Models\SeoSetting::branding();
+@endphp
+
+@if ($branding['favicon'])
+    <link rel="icon" href="{{ $branding['favicon'] }}" @if($branding['favicon_type']) type="{{ $branding['favicon_type'] }}" @endif>
+    <link rel="apple-touch-icon" href="{{ $branding['favicon'] }}">
+@else
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+@endif
 
 <link rel="preconnect" href="https://fonts.bunny.net">
 <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
@@ -62,6 +71,11 @@
     .gap-x-2{column-gap:.5rem}
     .gap-y-1{row-gap:.25rem}
 
+    /* Sizing for the uploaded brand logo in the sidebar and header. */
+    .max-w-44{max-width:11rem}
+    .max-w-full{max-width:100%}
+    .object-left{object-position:left}
+
     @media (min-width:640px){
         .sm\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
         .sm\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -76,6 +90,33 @@
         .xl\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
         .xl\:grid-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
     }
+</style>
+
+{{--
+    Row controls for the server-rendered DataTables cells. These live here, not
+    in a page's own <style>, because the markup is built in the controllers and
+    every listing screen shares it.
+--}}
+<style id="data-table-cells">
+    .dt-actions{align-items:center;display:inline-flex;gap:.3rem;white-space:nowrap}
+    .dt-actions form{display:inline;margin:0}
+
+    .dt-btn{align-items:center;background:#fff;border:1px solid #dbe4f0;border-radius:8px;
+        color:#475569;cursor:pointer;display:inline-flex;height:1.85rem;justify-content:center;
+        line-height:1;padding:0;transition:background-color .15s,border-color .15s,color .15s;
+        width:1.85rem}
+    .dt-btn svg{height:.95rem;width:.95rem}
+    .dt-btn:hover{background:#f1f5f9;color:#0f172a}
+    .dt-btn:focus-visible{outline:2px solid #0ea5e9;outline-offset:1px}
+    .dt-btn.is-view:hover{background:#f0f9ff;border-color:#bae6fd;color:#0369a1}
+    .dt-btn.is-edit:hover{background:#ecfdf5;border-color:#a7f3d0;color:#047857}
+    .dt-btn.is-delete{color:#e11d48}
+    .dt-btn.is-delete:hover{background:#fef2f2;border-color:#fca5a5;color:#b91c1c}
+
+    .dt-badge{border:1px solid;border-radius:9999px;display:inline-flex;font-size:.64rem;
+        font-weight:600;line-height:1;padding:.25rem .5rem}
+    .dt-badge.is-on{background:#ecfdf3;border-color:#a7f3d0;color:#047857}
+    .dt-badge.is-off{background:#f1f5f9;border-color:#cbd5e1;color:#475569}
 </style>
 <script src="{{ asset('js/iziToast.js') }}"></script>
 @fluxAppearance

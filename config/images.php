@@ -53,6 +53,11 @@ return [
 
         // Scans of invoices and receipts -- legibility over file size.
         'document' => ['max_width' => 2000, 'max_height' => 2000, 'quality' => 88],
+
+        // Favicons are stored exactly as uploaded. They are already tiny, and
+        // an .ico or .svg must stay what it is -- browser support for a WebP
+        // favicon is still inconsistent, Safari in particular.
+        'favicon' => ['max_width' => 512, 'max_height' => 512, 'quality' => 100, 'passthrough' => true],
     ],
 
 ];

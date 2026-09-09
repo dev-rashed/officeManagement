@@ -68,6 +68,8 @@ class SeoController extends Controller
 
             'default_og_image' => ['nullable', 'image', 'max:2048'],
             'organization_logo' => ['nullable', 'image', 'max:2048'],
+            // .ico is not covered by the 'image' rule, and a favicon is often one.
+            'favicon' => ['nullable', 'file', 'mimes:png,jpg,jpeg,svg,ico,webp,gif', 'max:512'],
         ], [
             'google_analytics_id.regex' => 'A GA4 measurement ID looks like G-XXXXXXXXXX.',
             'google_tag_manager_id.regex' => 'A GTM container ID looks like GTM-XXXXXXX.',
@@ -78,7 +80,7 @@ class SeoController extends Controller
 
         // A share image should stay near 1200px; a logo keeps its alpha and is
         // encoded losslessly.
-        foreach (['default_og_image' => 'social', 'organization_logo' => 'logo'] as $field => $preset) {
+        foreach (['default_og_image' => 'social', 'organization_logo' => 'logo', 'favicon' => 'favicon'] as $field => $preset) {
             if ($request->hasFile($field) || $request->boolean('remove_'.$field)) {
                 $data[$field] = $this->resolveUpload($request, $field, $settings->{$field}, 'images/seo', $preset);
             } else {

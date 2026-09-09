@@ -88,7 +88,8 @@
                             {{ __('Website Analytics') }}
                         </flux:sidebar.item>
                         <flux:sidebar.item :href="route('admin.seo.settings')" :current="request()->routeIs('admin.seo.settings')" wire:navigate>
-                            {{ __('SEO & Analytics') }}
+                            {{-- Raw, not {{ }}: Flux escapes the slot text again for the collapsed-sidebar tooltip, which turns an escaped & into &amp;amp;. --}}
+                            {!! __('SEO & Analytics') !!}
                         </flux:sidebar.item>
                         <flux:sidebar.item :href="route('admin.seo.pages')" :current="request()->routeIs('admin.seo.pages')" wire:navigate>
                             {{ __('Per-page SEO') }}
@@ -130,7 +131,7 @@
                     @endcan
                     @can('roles.manage')
                         <flux:sidebar.item icon="shield-check" :href="route('admin.roles.index')" :current="request()->routeIs('admin.roles.*')" wire:navigate>
-                            {{ __('Roles & Permissions') }}
+                            {!! __('Roles & Permissions') !!}
                         </flux:sidebar.item>
                     @endcan
                     @can('assets.manage')

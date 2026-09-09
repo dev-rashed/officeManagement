@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\UnreadableUploadException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -23,30 +24,39 @@ class ImageService
      * Store an upload, optimising it if it is an image.
      *
      * @return string The path relative to the public disk.
+     *
+     * @throws UnreadableUploadException when the temporary upload cannot be read
      */
     public function store(UploadedFile $file, string $directory, string $preset = 'default', string $disk = 'public'): string
     {
         $directory = trim($directory, '/');
 
-        if (! $this->shouldOptimise($file)) {
-            return $file->store($directory, $disk);
+        // Read once, up front. Everything below works on the bytes, so a failure
+        // to reach the temp file surfaces here rather than halfway through.
+        $contents = $this->read($file);
+        $settings = $this->preset($preset);
+
+        if ($this->shouldOptimise($file, $settings)) {
+            try {
+                $encoded = $this->optimise($contents, $file, $settings);
+
+                $path = $directory.'/'.Str::random(40).'.webp';
+                Storage::disk($disk)->put($path, $encoded);
+
+                return $path;
+            } catch (\Throwable $e) {
+                // A conversion failure must never lose the user's upload; fall
+                // through and store what arrived.
+                Log::warning('Image optimisation failed; storing the original', [
+                    'name' => $file->getClientOriginalName(),
+                    'mime' => $file->getMimeType(),
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
-        try {
-            $encoded = $this->optimise($file, $this->preset($preset));
-        } catch (\Throwable $e) {
-            // A conversion failure must never lose the user's upload.
-            Log::warning('Image optimisation failed; storing the original', [
-                'name' => $file->getClientOriginalName(),
-                'mime' => $file->getMimeType(),
-                'error' => $e->getMessage(),
-            ]);
-
-            return $file->store($directory, $disk);
-        }
-
-        $path = $directory.'/'.Str::random(40).'.webp';
-        Storage::disk($disk)->put($path, $encoded);
+        $path = $directory.'/'.Str::random(40).'.'.$this->extension($file);
+        Storage::disk($disk)->put($path, $contents);
 
         return $path;
     }
@@ -81,8 +91,72 @@ class ImageService
         return $file && str_starts_with((string) $file->getMimeType(), 'image/');
     }
 
-    private function shouldOptimise(UploadedFile $file): bool
+    /**
+     * Where the uploaded bytes actually are.
+     *
+     * getRealPath() resolves through realpath(), which returns false on some
+     * Windows temp-directory setups even though the file is perfectly readable.
+     * getPathname() is the raw upload path and is never resolved, so it is the
+     * reliable fallback. Callers must handle null.
+     */
+    private function readablePath(UploadedFile $file): ?string
     {
+        foreach ([$file->getRealPath(), $file->getPathname()] as $candidate) {
+            if (is_string($candidate) && $candidate !== '' && is_file($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @throws UnreadableUploadException
+     */
+    private function read(UploadedFile $file): string
+    {
+        $path = $this->readablePath($file);
+
+        $contents = $path === null ? false : @file_get_contents($path);
+
+        if ($contents === false || $contents === '') {
+            Log::error('Uploaded file could not be read', [
+                'name' => $file->getClientOriginalName(),
+                'real_path' => $file->getRealPath(),
+                'pathname' => $file->getPathname(),
+                'error' => $file->getErrorMessage(),
+            ]);
+
+            throw new UnreadableUploadException(
+                'The uploaded file could not be read from temporary storage.'
+            );
+        }
+
+        return $contents;
+    }
+
+    /**
+     * The extension to store an unoptimised file under.
+     *
+     * Derived from the MIME type where possible, falling back to the client's
+     * extension, sanitised — it ends up in a filename.
+     */
+    private function extension(UploadedFile $file): string
+    {
+        $extension = $file->extension() ?: $file->getClientOriginalExtension();
+        $extension = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', (string) $extension));
+
+        return $extension !== '' ? $extension : 'bin';
+    }
+
+    private function shouldOptimise(UploadedFile $file, array $preset = []): bool
+    {
+        // Some uses need the original format kept — a favicon, for instance,
+        // because browser support for a WebP icon is still patchy.
+        if (! empty($preset['passthrough'])) {
+            return false;
+        }
+
         if (! $this->isImage($file)) {
             return false;
         }
@@ -105,9 +179,8 @@ class ImageService
     /**
      * Decode, orient, downscale and re-encode.
      */
-    private function optimise(UploadedFile $file, array $preset): string
+    private function optimise(string $contents, UploadedFile $file, array $preset): string
     {
-        $contents = file_get_contents($file->getRealPath());
         $image = @imagecreatefromstring($contents);
 
         if ($image === false) {
@@ -115,7 +188,7 @@ class ImageService
         }
 
         try {
-            $image = $this->applyExifOrientation($image, $file);
+            $image = $this->applyExifOrientation($image, $contents, $file);
             $image = $this->downscale($image, $preset['max_width'], $preset['max_height']);
 
             // WebP carries alpha, so transparency survives a PNG conversion --
@@ -123,19 +196,17 @@ class ImageService
             imagealphablending($image, false);
             imagesavealpha($image, true);
 
-            ob_start();
+            $encoded = $this->capture(function () use ($image, $preset) {
+                if (! config('images.convert_to_webp', true)) {
+                    imagejpeg($image, null, (int) $preset['quality']);
+                } elseif (! empty($preset['lossless'])) {
+                    imagewebp($image, null, IMG_WEBP_LOSSLESS);
+                } else {
+                    imagewebp($image, null, (int) $preset['quality']);
+                }
+            });
 
-            if (! config('images.convert_to_webp', true)) {
-                imagejpeg($image, null, (int) $preset['quality']);
-            } elseif (! empty($preset['lossless'])) {
-                imagewebp($image, null, IMG_WEBP_LOSSLESS);
-            } else {
-                imagewebp($image, null, (int) $preset['quality']);
-            }
-
-            $encoded = ob_get_clean();
-
-            if ($encoded === false || $encoded === '') {
+            if ($encoded === '') {
                 throw new \RuntimeException('Encoding produced no output.');
             }
 
@@ -148,16 +219,47 @@ class ImageService
     }
 
     /**
+     * GD writes to stdout when handed a null filename, so the encoders are run
+     * inside an output buffer. The finally is what matters: without it a throw
+     * mid-encode would leave the buffer open and corrupt the response.
+     */
+    private function capture(callable $encode): string
+    {
+        ob_start();
+
+        try {
+            $encode();
+
+            return (string) ob_get_contents();
+        } finally {
+            ob_end_clean();
+        }
+    }
+
+    /**
      * Phone cameras record rotation in EXIF rather than rotating the pixels.
      * Without this, portrait photos appear on their side.
      */
-    private function applyExifOrientation(\GdImage $image, UploadedFile $file): \GdImage
+    private function applyExifOrientation(\GdImage $image, string $contents, UploadedFile $file): \GdImage
     {
         if (! function_exists('exif_read_data') || $file->getMimeType() !== 'image/jpeg') {
             return $image;
         }
 
-        $exif = @exif_read_data($file->getRealPath());
+        // Read the EXIF out of the bytes rather than the path, for the same
+        // reason read() does -- the temp path is not always resolvable.
+        $stream = fopen('php://memory', 'r+');
+        fwrite($stream, $contents);
+        rewind($stream);
+
+        try {
+            $exif = @exif_read_data($stream);
+        } catch (\Throwable) {
+            $exif = false;
+        } finally {
+            fclose($stream);
+        }
+
         $orientation = $exif['Orientation'] ?? null;
 
         if (! $orientation || $orientation === 1) {

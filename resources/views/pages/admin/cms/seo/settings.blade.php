@@ -137,9 +137,22 @@
                             name="organization_logo"
                             :label="__('Logo')"
                             :value="$settings->organization_logo"
-                            hint="{{ __('Used in search result structured data. Kept lossless so transparency survives.') }}"
+                            hint="{{ __('Shown in the site header, the admin sidebar and search result structured data. Kept lossless so transparency survives.') }}"
                             height="6rem"
                         />
+                        @error('organization_logo') <p class="seo-err">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <x-image-upload
+                            name="favicon"
+                            :label="__('Favicon')"
+                            :value="$settings->favicon"
+                            accept="image/png,image/svg+xml,image/x-icon,image/vnd.microsoft.icon,image/webp,image/jpeg,.ico"
+                            hint="{{ __('The little icon in the browser tab. A square PNG or SVG of 512×512 or less. Stored exactly as uploaded — icons are not converted. Max 512 KB.') }}"
+                            height="6rem"
+                        />
+                        @error('favicon') <p class="seo-err">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="sm:col-span-2">

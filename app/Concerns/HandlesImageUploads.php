@@ -2,8 +2,10 @@
 
 namespace App\Concerns;
 
+use App\Exceptions\UnreadableUploadException;
 use App\Services\ImageService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 /**
  * One way of handling an uploaded file across every controller: optimise and
@@ -31,7 +33,15 @@ trait HandlesImageUploads
         $images = app(ImageService::class);
 
         if ($request->hasFile($field)) {
-            return $images->replace($current, $request->file($field), $directory, $preset);
+            try {
+                return $images->replace($current, $request->file($field), $directory, $preset);
+            } catch (UnreadableUploadException) {
+                // Send them back to the form with a message they can act on,
+                // rather than a 500 that loses everything else they typed.
+                throw ValidationException::withMessages([
+                    $field => __('That file could not be read. Please choose it again and resave.'),
+                ]);
+            }
         }
 
         if ($request->boolean('remove_'.$field)) {
