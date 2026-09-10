@@ -24,9 +24,10 @@
         </button>
 
         <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-lg bg-linear-to-br from-sky-50 via-white to-blue-100 shadow-inner shadow-white/80 ring-1 ring-black/5 dark:from-sky-500/15 dark:via-zinc-900 dark:to-blue-500/15 dark:ring-white/10 sm:h-24 sm:w-24" data-popup-icon-wrap>
+            @php($popupBrand = \App\Models\SeoSetting::branding())
             <img
-                src="{{ asset('favicon.svg') }}"
-                alt="{{ config('app.name', 'Application') }}"
+                src="{{ $popupBrand['favicon'] ?? $popupBrand['logo'] ?? asset('favicon.svg') }}"
+                alt="{{ $popupBrand['name'] }}"
                 class="h-14 w-14 object-contain"
                 data-popup-icon
             />

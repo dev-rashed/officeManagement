@@ -74,7 +74,9 @@ class SeoSetting extends Model
      */
     public static function branding(): array
     {
-        return Cache::remember(self::BRANDING_CACHE_KEY, now()->addDay(), function () {
+        // Memoised as well as cached: the head partial, the layout and the
+        // sidebar each ask for this, and the cache store is the database.
+        return self::$branding ??= Cache::remember(self::BRANDING_CACHE_KEY, now()->addDay(), function () {
             // first(), not current() — rendering a page must never write a row.
             $settings = static::query()->first();
 
@@ -93,6 +95,9 @@ class SeoSetting extends Model
 
     private const BRANDING_CACHE_KEY = 'seo.branding';
 
+    /** Per-request memo, so several views asking cost one lookup. */
+    private static ?array $branding = null;
+
     /** The <link rel="icon"> type, so the browser does not have to sniff. */
     private static function mimeForIcon(?string $path): ?string
     {
@@ -109,7 +114,12 @@ class SeoSetting extends Model
 
     protected static function booted(): void
     {
-        static::saved(fn () => Cache::forget(self::BRANDING_CACHE_KEY));
-        static::deleted(fn () => Cache::forget(self::BRANDING_CACHE_KEY));
+        $flush = function () {
+            self::$branding = null;
+            Cache::forget(self::BRANDING_CACHE_KEY);
+        };
+
+        static::saved($flush);
+        static::deleted($flush);
     }
 }

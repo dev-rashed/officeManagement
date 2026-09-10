@@ -1,13 +1,15 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<title>
-    {{ filled($title ?? null) ? $title.' - '.config('app.name', 'Laravel') : config('app.name', 'Laravel') }}
-</title>
-
 @php
     $branding = \App\Models\SeoSetting::branding();
 @endphp
+
+{{-- The site name from CMS -> SEO settings, not APP_NAME, which is still
+     whatever the installer put in .env. --}}
+<title>
+    {{ filled($title ?? null) ? $title.' — '.$branding['name'] : $branding['name'] }}
+</title>
 
 @if ($branding['favicon'])
     <link rel="icon" href="{{ $branding['favicon'] }}" @if($branding['favicon_type']) type="{{ $branding['favicon_type'] }}" @endif>

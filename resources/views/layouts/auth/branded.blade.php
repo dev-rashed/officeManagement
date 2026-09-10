@@ -1,3 +1,8 @@
+@php
+    // Defined here, not taken from partials.head: an @include gets its own
+    // scope, so anything it declares does not come back to this view.
+    $branding = \App\Models\SeoSetting::branding();
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
@@ -11,12 +16,17 @@
                  the form below the fold. --}}
             <aside class="au-brand" aria-hidden="true">
                 <div class="au-brand-inner">
-                    <div class="au-mark">
-                        <x-app-logo-icon class="size-7 fill-current text-white" />
+                    <div class="au-mark @if($branding['logo']) is-logo @endif">
+                        @if ($branding['logo'])
+                            <img src="{{ $branding['logo'] }}" alt="">
+                        @else
+                            <x-app-logo-icon class="size-7 fill-current text-white" />
+                        @endif
                     </div>
 
+                    <div class="au-brand-body">
                     <div>
-                        <h1 class="au-brand-title">{{ config('app.name', 'Office Management') }}</h1>
+                        <h1 class="au-brand-title">{{ $branding['name'] }}</h1>
                         <p class="au-brand-sub">{{ __('Finance, projects, training and website — in one place.') }}</p>
                     </div>
 
@@ -40,8 +50,9 @@
                             {{ __('Website content, SEO and traffic analytics') }}
                         </li>
                     </ul>
+                    </div>
 
-                    <p class="au-brand-foot">&copy; {{ date('Y') }} {{ config('app.name') }}</p>
+                    <p class="au-brand-foot">&copy; {{ date('Y') }} {{ $branding['name'] }}</p>
                 </div>
             </aside>
 
@@ -49,8 +60,12 @@
             <main class="au-main">
                 <div class="au-card">
                     <a href="{{ route('home') }}" class="au-mobile-mark">
-                        <x-app-logo-icon class="size-8 fill-current" />
-                        <span class="sr-only">{{ config('app.name', 'Laravel') }}</span>
+                        @if ($branding['logo'])
+                            <img src="{{ $branding['logo'] }}" alt="{{ $branding['name'] }}">
+                        @else
+                            <x-app-logo-icon class="size-8 fill-current" />
+                        @endif
+                        <span class="sr-only">{{ $branding['name'] }}</span>
                     </a>
 
                     {{ $slot }}
@@ -72,22 +87,35 @@
             .au-body { background:#fafafa; margin:0; min-height:100svh; }
             .au-shell { display:grid; min-height:100svh; }
 
-            /* Brand panel */
+            /* Brand panel.
+               Three rows spread top-to-bottom: the mark, the pitch, the
+               copyright. space-between does the distributing -- the previous
+               justify-content:center fought the footer's margin-top:auto and
+               neither won cleanly. The inner box is sized so its content column
+               is 24rem, matching the form card opposite it. */
             .au-brand { display:none; }
-            .au-brand-inner { display:flex; flex-direction:column; gap:2.2rem; height:100%; justify-content:center; max-width:26rem; padding:3.5rem; }
-            .au-mark { align-items:center; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18); border-radius:14px; display:flex; height:3rem; justify-content:center; width:3rem; }
-            .au-brand-title { color:#fff; font-size:1.55rem; font-weight:700; letter-spacing:-.02em; line-height:1.15; }
-            .au-brand-sub { color:rgba(255,255,255,.72); font-size:.92rem; line-height:1.5; margin-top:.5rem; }
+            .au-brand-inner { align-items:flex-start; display:flex; flex-direction:column; gap:2.5rem; height:100%; justify-content:space-between; max-width:31rem; padding:3.5rem; width:100%; }
+            .au-brand-body { display:flex; flex-direction:column; gap:2rem; width:100%; }
+
+            .au-mark { align-items:center; align-self:flex-start; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18); border-radius:14px; display:flex; height:3rem; justify-content:center; width:3rem; }
+            /* An uploaded logo sits on a light tile -- the panel is dark and a
+               logo with dark lettering would otherwise vanish into it. */
+            .au-mark.is-logo { background:#fff; border-color:rgba(255,255,255,.85); height:auto; max-width:15rem; padding:.6rem .85rem; width:auto; }
+            .au-mark.is-logo img { display:block; height:2.1rem; max-width:100%; object-fit:contain; width:auto; }
+
+            .au-brand-title { color:#fff; font-size:1.55rem; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
+            .au-brand-sub { color:rgba(255,255,255,.72); font-size:.92rem; line-height:1.5; margin-top:.55rem; }
             .au-points { display:flex; flex-direction:column; gap:.9rem; list-style:none; margin:0; padding:0; }
             .au-points li { align-items:flex-start; color:rgba(255,255,255,.86); display:flex; font-size:.85rem; gap:.65rem; line-height:1.45; }
             .au-point-icon { align-items:center; background:rgba(255,255,255,.16); border-radius:9999px; color:#fff; display:flex; flex-shrink:0; height:1.25rem; justify-content:center; margin-top:.06rem; width:1.25rem; }
-            .au-brand-foot { color:rgba(255,255,255,.45); font-size:.72rem; margin-top:auto; }
+            .au-brand-foot { color:rgba(255,255,255,.45); font-size:.72rem; margin:0; }
 
             /* Form panel */
-            .au-main { align-items:center; display:flex; justify-content:center; padding:1.5rem; }
+            .au-main { align-items:center; display:flex; justify-content:center; padding:2rem 1.5rem; }
             .au-card { display:flex; flex-direction:column; gap:1.6rem; max-width:24rem; width:100%; }
             .au-mobile-mark { align-items:center; color:#18181b; display:flex; justify-content:center; margin-bottom:.2rem; }
-            .au-secure { align-items:center; color:#a1a1aa; display:flex; font-size:.72rem; gap:.35rem; justify-content:center; }
+            .au-mobile-mark img { display:block; height:2.5rem; max-width:13rem; object-fit:contain; width:auto; }
+            .au-secure { align-items:center; color:#a1a1aa; display:flex; font-size:.72rem; gap:.35rem; justify-content:center; margin:0; }
 
             @media (min-width: 1024px) {
                 .au-shell { grid-template-columns:minmax(0, 1fr) minmax(0, 1.05fr); }

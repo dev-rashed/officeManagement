@@ -1,3 +1,8 @@
+@php
+    // An @include has its own scope, so the head partial's copy does not
+    // reach this view -- resolve the branding here.
+    $branding = \App\Models\SeoSetting::branding();
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
@@ -11,7 +16,7 @@
                         <x-app-logo-icon class="size-9 fill-current text-black dark:text-white" />
                     </span>
 
-                    <span class="sr-only">{{ config('app.name', 'Laravel') }}</span>
+                    <span class="sr-only">{{ $branding['name'] }}</span>
                 </a>
 
                 <div class="flex flex-col gap-6">
